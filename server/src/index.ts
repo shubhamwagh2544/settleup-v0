@@ -2,12 +2,12 @@ import express, { Request, Response } from 'express';
 import { NODE_PORT } from './config/config';
 import cors from 'cors';
 import userRouter from './routes/userRoutes';
-import { connect } from './config/dbconfig';
+import { connectDatabase } from './config/dbconfig';
 
 const app = express();
 
 // connect to database
-connect().then(() => {
+connectDatabase().then(() => {
     console.log('Connected to the database');
 });
 
