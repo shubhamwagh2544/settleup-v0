@@ -21,4 +21,20 @@ model User {
   isActive        Boolean     @default(true) @map("is_active")
   mfaEnabled      Boolean?    @default(false) @map("mfa_enabled")
   defaultLang     String?     @default("en") @db.VarChar(255) @map("default_lang")
+  isAdmin         Boolean     @default(false) @map("is_admin")
+  Room            Room[]
+}
+
+model Room {
+  id              Int         @id @db.Integer @default(autoincrement()) @map("id")
+  name            String      @db.VarChar(255) @map("name")
+  description     String?     @db.Text @map("description")
+  users           User[]
+  createdAt       DateTime    @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt       DateTime    @default(now()) @db.Timestamp(6) @map("updated_at")
+  roomType        String      @default("public") @db.VarChar(255) @map("room_type")
+  roomPic         String?     @db.VarChar(255) @map("room_pic")
+  isActive        Boolean     @default(true) @map("is_active")
+  adminId         Int         @db.Integer @map("admin_id")
+  admin           User        @relation(fields: [adminId], references: [id])
 }
