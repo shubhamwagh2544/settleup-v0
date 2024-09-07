@@ -54,7 +54,8 @@ class UserService {
             throw new CustomError('Invalid email or password', 400);
         }
 
-        return user;
+        const {password: _, ...userWithoutPassword} = user;
+        return userWithoutPassword;
     }
 }
 
