@@ -1,36 +1,52 @@
-import { Request, Response } from 'express';
-import { UserSignInRequest, UserSignUpRequest } from '../config/types';
-import { disconnectDatabase } from '../config/dbconfig';
+import {Request, Response} from 'express';
 import UserService from '../services/userService';
 import errorHandler from '../middlewares/errorHandler';
+import DbConfig from '../config/dbConfig';
 
 const userService = UserService.getInstance();
 
-async function signUp(req: Request, res: Response) {
-    try {
-        const { email, password }: UserSignUpRequest = req.body;
+class UserController {
+    private static instance: UserController;
 
-        const user = userService.signUp(email, password);
+    static getInstance() {
+        if (!this.instance) {
+            this.instance = new UserController();
+        }
+        return this.instance;
+    }
 
-        return res.status(201).json(user);
-    } catch (error) {
-        console.error('Error while signing up user:', error);
-        await disconnectDatabase();
-        return errorHandler(error, req, res);
+    async signUp(req: Request, res: Response) {
+        try {
+            const { email, password } = req.body;
+            const user = await userService.signUp(email, password);
+            return res.status(201).json(user);
+        } catch (error) {
+            await DbConfig.disconnectDatabase();
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async signIn(req: Request, res: Response) {
+        try {
+            const { email, password } = req.body;
+            const user = await userService.signIn(email, password);
+            return res.status(200).json(user);
+        } catch (error) {
+            await DbConfig.disconnectDatabase();
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getUserById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const user = await userService.getUserById(parseInt(id));
+            return res.status(200).json(user);
+        } catch (error) {
+            await DbConfig.disconnectDatabase();
+            return errorHandler(error, req, res);
+        }
     }
 }
 
-async function signIn(req: Request, res: Response) {
-    try {
-        const { email, password }: UserSignInRequest = req.body;
-
-        const user = userService.signIn(email, password);
-
-        return res.status(200).json(user);
-    } catch (error) {
-        await disconnectDatabase();
-        return errorHandler(error, req, res);
-    }
-}
-
-export { signUp, signIn };
+export default UserController;

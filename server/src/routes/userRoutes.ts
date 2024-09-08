@@ -1,10 +1,33 @@
-import express from 'express';
-import { signIn, signUp } from '../controllers/userController';
+import express, { Router } from 'express';
+import UserController from '../controllers/userController';
 
-const userRouter = express.Router();
+const userController = UserController.getInstance();
 
-userRouter.post('/signup', signUp);
+class UserRoutes {
+    private static instance: UserRoutes;
+    private readonly userRouter: Router;
 
-userRouter.post('/signin', signIn);
+    constructor() {
+        this.userRouter = express.Router();
+        this.initialiseRoutes();
+    }
 
-export default userRouter;
+    static getInstance() {
+        if (!this.instance) {
+            this.instance = new UserRoutes();
+        }
+        return this.instance;
+    }
+
+    private initialiseRoutes() {
+        this.userRouter.post('/signup', userController.signUp);
+        this.userRouter.post('/signin', userController.signIn);
+        this.userRouter.get('/:id', userController.getUserById);
+    }
+
+    getRouter() {
+        return this.userRouter;
+    }
+}
+
+export default UserRoutes;

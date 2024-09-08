@@ -28,7 +28,7 @@ model User {
 
 model Room {
   id          Int        @id @default(autoincrement()) @map("id") @db.Integer
-  name        String     @map("name") @db.VarChar(255)
+  name        String     @unique @map("name") @db.VarChar(255)
   description String?    @map("description") @db.Text
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime   @default(now()) @map("updated_at") @db.Timestamp(6)

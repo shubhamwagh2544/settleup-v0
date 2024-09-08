@@ -1,6 +1,8 @@
-import { prisma } from '../config/dbconfig';
 import CustomError from '../error/customError';
 import bcrypt from 'bcrypt';
+import DbConfig from '../config/dbConfig';
+
+const prisma = DbConfig.getInstance();
 
 class UserService {
     private static instance: UserService;
@@ -21,8 +23,8 @@ class UserService {
         // check if user already exists
         const existingUser = await prisma.user.findUnique({
             where: {
-                email
-            }
+                email,
+            },
         });
         if (existingUser) {
             throw new CustomError('User already exists', 409);
@@ -30,12 +32,15 @@ class UserService {
         // hash the password
         const hashedPassword = await bcrypt.hash(password, this.saltRounds);
 
-        return prisma.user.create({
+        const user = await prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
-            }
+            },
         });
+
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
 
     async signIn(email: string, password: string) {
@@ -54,7 +59,20 @@ class UserService {
             throw new CustomError('Invalid email or password', 400);
         }
 
-        const {password: _, ...userWithoutPassword} = user;
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+    }
+
+    async getUserById(id: number) {
+        const user = await prisma.user.findUnique({
+            where: {
+                id,
+            },
+        });
+        if (!user) {
+            throw new CustomError('User not found', 404);
+        }
+        const { password: _, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }
 }

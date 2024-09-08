@@ -8,7 +8,7 @@ export default function errorHandler(err: Error | unknown, req: Request, res: Re
         return res.status(err.statusCode).json({
             status: 'error',
             statusCode: err.statusCode,
-            message: err.message
+            message: err.message,
         });
     }
 
@@ -16,6 +16,6 @@ export default function errorHandler(err: Error | unknown, req: Request, res: Re
     return res.status(500).json({
         status: 'error',
         statusCode: 500,
-        message: 'Internal Server Error'
+        message: 'Internal Server Error',
     });
 }
