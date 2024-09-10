@@ -29,7 +29,6 @@ class RoomService {
                 }
             }
         });
-
         if (existingRoom) {
             throw new CustomError('Room already exists', 409);
         }

@@ -8,22 +8,24 @@ datasource db {
 }
 
 model User {
-  id          Int        @id @default(autoincrement()) @map("id") @db.Integer
-  firstName   String?    @map("first_name") @db.VarChar(255)
-  lastName    String?    @map("last_name") @db.VarChar(255)
-  email       String     @unique @map("email") @db.VarChar(255)
-  password    String     @map("password") @db.VarChar(255)
-  phoneNumber String?    @unique @map("phone_number") @db.VarChar(255)
-  address     String?    @map("address") @db.VarChar(255)
-  profilePic  String?    @map("profile_pic") @db.VarChar(255)
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime   @default(now()) @map("updated_at") @db.Timestamp(6)
-  isActive    Boolean    @default(true) @map("is_active")
-  mfaEnabled  Boolean?   @default(false) @map("mfa_enabled")
-  defaultLang String?    @default("en") @map("default_lang") @db.VarChar(255)
-  isAdmin     Boolean    @default(false) @map("is_admin")
-  private     Boolean?   @default(false) @map("public")
+  id          Int            @id @default(autoincrement()) @map("id") @db.Integer
+  firstName   String?        @map("first_name") @db.VarChar(255)
+  lastName    String?        @map("last_name") @db.VarChar(255)
+  email       String         @unique @map("email") @db.VarChar(255)
+  password    String         @map("password") @db.VarChar(255)
+  phoneNumber String?        @unique @map("phone_number") @db.VarChar(255)
+  address     String?        @map("address") @db.VarChar(255)
+  profilePic  String?        @map("profile_pic") @db.VarChar(255)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime       @default(now()) @map("updated_at") @db.Timestamp(6)
+  isActive    Boolean        @default(true) @map("is_active")
+  mfaEnabled  Boolean?       @default(false) @map("mfa_enabled")
+  defaultLang String?        @default("en") @map("default_lang") @db.VarChar(255)
+  isAdmin     Boolean        @default(false) @map("is_admin")
+  private     Boolean?       @default(false) @map("private")
+  balance     Float          @default(0) @map("balance")
   rooms       UserRoom[]
+  expenses    UserExpenses[]
 }
 
 model Room {
@@ -36,14 +38,36 @@ model Room {
   roomPic     String?    @map("room_pic") @db.VarChar(255)
   isActive    Boolean    @default(true) @map("is_active")
   users       UserRoom[]
+  expenses    Expense[]
 }
 
 model UserRoom {
   userId  Int
-  User    User    @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
   roomId  Int
-  Room    Room    @relation(fields: [roomId], references: [id])
+  room    Room    @relation(fields: [roomId], references: [id])
   isAdmin Boolean @default(false) @map("is_admin")
 
   @@id([userId, roomId])
+}
+
+model Expense {
+  id          Int            @id @default(autoincrement()) @map("id") @db.Integer
+  name        String         @map("name") @db.VarChar(255)
+  description String?        @map("description") @db.Text
+  amount      Float          @map("amount")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime       @default(now()) @map("updated_at") @db.Timestamp(6)
+  roomId      Int            @db.Integer
+  room        Room           @relation(fields: [roomId], references: [id])
+  users       UserExpenses[]
+}
+
+model UserExpenses {
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  expenseId Int
+  expense   Expense @relation(fields: [expenseId], references: [id])
+
+  @@id([userId, expenseId])
 }
