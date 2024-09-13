@@ -1,8 +1,12 @@
 import CustomError from '../error/customError';
 import bcrypt from 'bcrypt';
 import DbConfig from '../config/dbConfig';
+import RoomService from './roomService';
+import IoConfig from '../config/ioConfig';
 
 const prisma = DbConfig.getInstance();
+const roomService = RoomService.getInstance();
+const io = IoConfig.getInstance();
 
 class UserService {
     private static instance: UserService;
@@ -39,6 +43,8 @@ class UserService {
             },
         });
 
+        // todo: joins default room
+
         const { password: _, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }
@@ -72,6 +78,9 @@ class UserService {
         if (!user) {
             throw new CustomError('User not found', 404);
         }
+
+        // todo: joins default room
+
         const { password: _, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }

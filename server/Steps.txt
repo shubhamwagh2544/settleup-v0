@@ -1,0 +1,2 @@
+- user creates a room -> joins that room
+- user registers on a platform -> joins default room
