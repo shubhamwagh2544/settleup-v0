@@ -8,66 +8,144 @@ datasource db {
 }
 
 model User {
-  id          Int            @id @default(autoincrement()) @map("id") @db.Integer
-  firstName   String?        @map("first_name") @db.VarChar(255)
-  lastName    String?        @map("last_name") @db.VarChar(255)
-  email       String         @unique @map("email") @db.VarChar(255)
-  password    String         @map("password") @db.VarChar(255)
-  phoneNumber String?        @unique @map("phone_number") @db.VarChar(255)
-  address     String?        @map("address") @db.VarChar(255)
-  profilePic  String?        @map("profile_pic") @db.VarChar(255)
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime       @default(now()) @map("updated_at") @db.Timestamp(6)
-  isActive    Boolean        @default(true) @map("is_active")
-  mfaEnabled  Boolean?       @default(false) @map("mfa_enabled")
-  defaultLang String?        @default("en") @map("default_lang") @db.VarChar(255)
-  isAdmin     Boolean        @default(false) @map("is_admin")
-  private     Boolean?       @default(false) @map("private")
-  balance     Float          @default(0) @map("balance")
-  rooms       UserRoom[]
-  expenses    UserExpenses[]
+  id          Int      @id @default(autoincrement()) @map("id") @db.Integer
+  firstName   String?  @map("first_name") @db.VarChar(255)
+  lastName    String?  @map("last_name") @db.VarChar(255)
+  email       String   @unique @map("email") @db.VarChar(255)
+  password    String   @map("password") @db.VarChar(255)
+  phoneNumber String?  @unique @map("phone_number") @db.VarChar(255)
+  address     String?  @map("address") @db.VarChar(255)
+  profilePic  String?  @map("profile_pic") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+  isActive    Boolean  @default(true) @map("is_active")
+  mfaEnabled  Boolean? @default(false) @map("mfa_enabled")
+  defaultLang String?  @default("en") @map("default_lang") @db.VarChar(255)
+  isAdmin     Boolean  @default(false) @map("is_admin")
+  isPrivate   Boolean? @default(false) @map("is_private")
+
+  // Relationships
+  rooms        UserRoom[]
+  userExpenses UserExpense[]
+  accounts     Account[]
+
+  sentTransactions     Transaction[] @relation("SenderTransactions")
+  receivedTransactions Transaction[] @relation("ReceiverTransactions")
 }
 
 model Room {
-  id          Int        @id @default(autoincrement()) @map("id") @db.Integer
-  name        String     @unique @map("name") @db.VarChar(255)
-  description String?    @map("description") @db.Text
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime   @default(now()) @map("updated_at") @db.Timestamp(6)
-  roomType    String     @default("public") @map("room_type") @db.VarChar(255)
-  roomPic     String?    @map("room_pic") @db.VarChar(255)
-  isActive    Boolean    @default(true) @map("is_active")
-  users       UserRoom[]
-  expenses    Expense[]
+  id          Int      @id @default(autoincrement()) @map("id") @db.Integer
+  name        String   @unique @map("name") @db.VarChar(255)
+  description String?  @map("description") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+  roomType    String   @default("public") @map("room_type") @db.VarChar(255)
+  roomPic     String?  @map("room_pic") @db.VarChar(255)
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Relationships
+  users    UserRoom[]
+  expenses Expense[]
 }
 
 model UserRoom {
+  id      Int     @id @default(autoincrement()) @db.Integer
   userId  Int
   user    User    @relation(fields: [userId], references: [id])
   roomId  Int
   room    Room    @relation(fields: [roomId], references: [id])
   isAdmin Boolean @default(false) @map("is_admin")
 
-  @@id([userId, roomId])
+  @@unique([userId, roomId])
 }
 
 model Expense {
-  id          Int            @id @default(autoincrement()) @map("id") @db.Integer
-  name        String         @map("name") @db.VarChar(255)
-  description String?        @map("description") @db.Text
-  amount      Float          @map("amount")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime       @default(now()) @map("updated_at") @db.Timestamp(6)
-  roomId      Int            @db.Integer
-  room        Room           @relation(fields: [roomId], references: [id])
-  users       UserExpenses[]
+  id          Int      @id @default(autoincrement()) @map("id") @db.Integer
+  name        String   @map("name") @db.VarChar(255)
+  description String?  @map("description") @db.Text
+  amount      Decimal  @map("amount")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relationships
+  roomId Int  @db.Integer
+  room   Room @relation(fields: [roomId], references: [id])
+
+  users        UserExpense[]
+  transactions Transaction[]
 }
 
-model UserExpenses {
+model UserExpense {
+  id        Int     @id @default(autoincrement()) @db.Integer
   userId    Int
   user      User    @relation(fields: [userId], references: [id])
   expenseId Int
   expense   Expense @relation(fields: [expenseId], references: [id])
 
-  @@id([userId, expenseId])
+  isLender   Boolean  @default(false) @map("is_lender")
+  amountOwed Decimal? @map("amount_owed")
+
+  @@unique([userId, expenseId])
+}
+
+model Account {
+  id                   Int       @id @default(autoincrement()) @map("id") @db.Integer
+  accountType          String    @map("account_type") @db.VarChar(50)
+  status               String    @default("active") @map("status") @db.VarChar(50)
+  balance              Decimal   @default(0) @map("balance") @db.Decimal(10, 2)
+  lastLoginAt          DateTime? @map("last_login_at") @db.Timestamp(6)
+  failedLoginAttempts  Int?      @default(0) @map("failed_login_attempts") @db.Integer
+  verificationToken    String?   @map("verification_token") @db.VarChar(255)
+  resetPasswordToken   String?   @map("reset_password_token") @db.VarChar(255)
+  resetPasswordExpires DateTime? @map("reset_password_expires") @db.Timestamp(6)
+  twoFactorSecret      String?   @map("two_factor_secret") @db.VarChar(255)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  userId Int  @map("user_id") @db.Integer
+  user   User @relation(fields: [userId], references: [id])
+
+  sentTransactions     Transaction[] @relation("SenderAccountTransactions")
+  receivedTransactions Transaction[] @relation("ReceiverAccountTransactions")
+
+  @@index([userId, accountType])
+}
+
+model Transaction {
+  id          Int               @id @default(autoincrement()) @map("id") @db.Integer
+  amount      Decimal           @map("amount") @db.Decimal(10, 2)
+  type        TransactionType   @default(TRANSFER) @map("type")
+  description String?           @map("description") @db.Text
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  status      TransactionStatus @default(PENDING) @map("status")
+
+  // Relations
+  // Sender and Receiver Accounts
+  senderAccountId   Int?
+  senderAccount     Account? @relation("SenderAccountTransactions", fields: [senderAccountId], references: [id])
+  receiverAccountId Int?
+  receiverAccount   Account? @relation("ReceiverAccountTransactions", fields: [receiverAccountId], references: [id])
+
+  // Sender and Receiver User
+  senderId   Int?
+  sender     User? @relation("SenderTransactions", fields: [senderId], references: [id])
+  receiverId Int?
+  receiver   User? @relation("ReceiverTransactions", fields: [receiverId], references: [id])
+
+  // Expense Relationship
+  expenseId Int?     @map("expense_id")
+  expense   Expense? @relation(fields: [expenseId], references: [id])
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionType {
+  TRANSFER
+  DEPOSIT
+  WITHDRAWAL
 }
