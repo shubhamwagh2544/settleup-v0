@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import BACKEND_URL from '../global.ts';
 import { toast } from 'sonner';
+import { useSocket } from '@/SocketProvider.tsx';
 
 export default function SignIn() {
     const [state, setState] = useState({
@@ -10,22 +11,28 @@ export default function SignIn() {
         password: '',
     });
     const navigate = useNavigate();
+    const socket = useSocket();
 
     async function handleSubmit() {
         try {
-            const response = await axios.post(`${BACKEND_URL}/api/user/signin`, state, {
+            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/users/signin`, state, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
             if (response.status === 200) {
-                toast.success(`Welcome, ${response.data.user.firstname} ${response.data.user.lastname} 👋`);
+                // socket logic to join default room
+                const user = response.data;
+                console.log('user', user);
+                socket?.emit('joinDefaultRoom', { user });
+
+                toast.success(`Welcome, ${user?.email} 👋`);
             }
 
-            const { token } = response.data;
-            localStorage.setItem('token', token);
+            // const { token } = response.data;
+            // localStorage.setItem('tok1en', token);
 
-            navigate('/view-profile');
+            navigate('/main-room')
         } catch (error: any) {
             if (error.response.status === 404) {
                 toast.success('Account not found! Please sign up ❌');
@@ -78,7 +85,7 @@ export default function SignIn() {
                 <div className="text-center mt-5">
                     <span className="text-sm">
                         Don't Have an Account ?
-                        <Link to="/signup" className="text-purple-700 hover:underline">
+                        <Link to="/" className="text-purple-700 hover:underline">
                             {' '}
                             Sign Up{' '}
                         </Link>
