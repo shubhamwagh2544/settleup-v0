@@ -1,20 +1,19 @@
-import IoConfig from '../config/ioConfig';
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
-import UserService from './userService';
+import { isNil } from 'lodash';
 
-const io = IoConfig.getInstance();
 const prisma = DbConfig.getInstance();
-const userService = UserService.getInstance();
 
 class RoomService {
     private static instance: RoomService;
 
-    static getInstance() {
-        if (!this.instance) {
-            this.instance = new RoomService();
+    private constructor() {}
+
+    public static getInstance() {
+        if (isNil(RoomService.instance)) {
+            RoomService.instance = new RoomService();
         }
-        return this.instance;
+        return RoomService.instance;
     }
 
     async createRoom(userId: number, name: string) {
@@ -24,10 +23,10 @@ class RoomService {
                 name,
                 users: {
                     some: {
-                        userId
-                    }
-                }
-            }
+                        userId,
+                    },
+                },
+            },
         });
         if (existingRoom) {
             throw new CustomError('Room already exists for user', 409);
@@ -40,12 +39,12 @@ class RoomService {
                     create: {
                         userId,
                         isAdmin: true,
-                    }
-                }
+                    },
+                },
             },
             include: {
-                users: true
-            }
+                users: true,
+            },
         });
 
         // join the room
@@ -63,7 +62,7 @@ class RoomService {
                         userId,
                         roomId,
                     },
-                }
+                },
             });
             if (existingUser) {
                 throw new CustomError('User already exists in the room', 409);
@@ -74,7 +73,7 @@ class RoomService {
                     userId,
                     roomId,
                     isAdmin,
-                }
+                },
             });
         }
         // if admin, he already in the room after creating it

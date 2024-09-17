@@ -14,11 +14,16 @@ DbConfig.connectDatabase().then(() => {
     console.log('Connected to the database');
 });
 
+// create a default room
+DbConfig.createDefaultRoom().then((room) => {
+    console.log('Default room created:', room.id);
+});
+
 // middlewares
 app.use(express.json());
 app.use(
     cors({
-        origin: ['http://localhost:3000'],
+        origin: ['http://localhost:5173'],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })
 );

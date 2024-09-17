@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import UserController from '../controllers/userController';
+import { isNil } from 'lodash';
 
 const userController = UserController.getInstance();
 
@@ -7,25 +8,25 @@ class UserRoutes {
     private static instance: UserRoutes;
     private readonly userRouter: Router;
 
-    constructor() {
+    private constructor() {
         this.userRouter = express.Router();
         this.initialiseRoutes();
     }
 
-    static getInstance() {
-        if (!this.instance) {
-            this.instance = new UserRoutes();
+    public static getInstance() {
+        if (isNil(UserRoutes.instance)) {
+            UserRoutes.instance = new UserRoutes();
         }
-        return this.instance;
+        return UserRoutes.instance;
     }
 
     private initialiseRoutes() {
         this.userRouter.post('/signup', userController.signUp);
         this.userRouter.post('/signin', userController.signIn);
-        this.userRouter.get('/:id', userController.getUserById);
+        this.userRouter.get('/:id', userController.getUserByIdOrEmail);
     }
 
-    getRouter() {
+    public getRouter() {
         return this.userRouter;
     }
 }

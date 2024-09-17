@@ -1,16 +1,19 @@
 import { PrismaClient } from '@prisma/client';
+import { isNil } from 'lodash';
 
 class DbConfig {
     private static prisma: PrismaClient;
 
-    static getInstance() {
-        if (!this.prisma) {
-            this.prisma = new PrismaClient();
+    private constructor() {}
+
+    public static getInstance() {
+        if (isNil(DbConfig.prisma)) {
+            DbConfig.prisma = new PrismaClient();
         }
-        return this.prisma;
+        return DbConfig.prisma;
     }
 
-    static async connectDatabase() {
+    public static async connectDatabase() {
         try {
             DbConfig.prisma.$connect();
         } catch (error) {
@@ -18,7 +21,7 @@ class DbConfig {
         }
     }
 
-    static async disconnectDatabase() {
+    public static async disconnectDatabase() {
         try {
             DbConfig.prisma.$disconnect();
             console.log('Disconnected from the database');
@@ -26,7 +29,39 @@ class DbConfig {
             console.error('Error disconnecting from the database:', error);
         }
     }
-}
 
+    public static async createDefaultRoom() {
+        let defaultRoom;
+        defaultRoom = await DbConfig.prisma.room.findUnique({
+            where: {
+                id: 0,
+                name: 'DEFAULT_ROOM',
+                isDefault: true,
+            },
+        });
+        if (!defaultRoom) {
+            defaultRoom = await DbConfig.prisma.room.create({
+                data: {
+                    id: 0,
+                    name: 'DEFAULT_ROOM',
+                    description: 'This is default room for all platform users',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    roomType: 'public',
+                    roomPic: null,
+                    isActive: true,
+                    isDefault: true,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    isDefault: true,
+                },
+            });
+        }
+        return defaultRoom;
+    }
+}
 
 export default DbConfig;

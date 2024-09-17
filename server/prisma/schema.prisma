@@ -25,9 +25,9 @@ model User {
   isPrivate   Boolean? @default(false) @map("is_private")
 
   // Relationships
-  rooms        UserRoom[]
-  userExpenses UserExpense[]
-  accounts     Account[]
+  rooms    UserRoom[]
+  expenses UserExpense[]
+  accounts Account[]
 
   sentTransactions     Transaction[] @relation("SenderTransactions")
   receivedTransactions Transaction[] @relation("ReceiverTransactions")
@@ -42,6 +42,7 @@ model Room {
   roomType    String   @default("public") @map("room_type") @db.VarChar(255)
   roomPic     String?  @map("room_pic") @db.VarChar(255)
   isActive    Boolean  @default(true) @map("is_active")
+  isDefault   Boolean  @default(false) @map("is_default")
 
   // Relationships
   users    UserRoom[]
@@ -108,8 +109,6 @@ model Account {
 
   sentTransactions     Transaction[] @relation("SenderAccountTransactions")
   receivedTransactions Transaction[] @relation("ReceiverAccountTransactions")
-
-  @@index([userId, accountType])
 }
 
 model Transaction {

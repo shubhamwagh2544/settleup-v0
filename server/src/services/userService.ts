@@ -1,22 +1,21 @@
 import CustomError from '../error/customError';
 import bcrypt from 'bcrypt';
 import DbConfig from '../config/dbConfig';
-import RoomService from './roomService';
-import IoConfig from '../config/ioConfig';
+import { isNil } from 'lodash';
 
 const prisma = DbConfig.getInstance();
-const roomService = RoomService.getInstance();
-const io = IoConfig.getInstance();
 
 class UserService {
     private static instance: UserService;
     private readonly saltRounds = 10;
 
-    static getInstance() {
-        if (!this.instance) {
-            this.instance = new UserService();
+    private constructor() {}
+
+    public static getInstance() {
+        if (isNil(UserService.instance)) {
+            UserService.instance = new UserService();
         }
-        return this.instance;
+        return UserService.instance;
     }
 
     async signUp(email: string, password: string) {
@@ -28,6 +27,10 @@ class UserService {
         const existingUser = await prisma.user.findUnique({
             where: {
                 email,
+            },
+            select: {
+                id: true,
+                email: true,
             },
         });
         if (existingUser) {
@@ -55,8 +58,14 @@ class UserService {
             where: {
                 email,
             },
+            select: {
+                id: true,
+                email: true,
+                password: true,
+            },
         });
-        if (!user) {
+
+        if (isNil(user)) {
             throw new CustomError('User not found', 404);
         }
         // check if password matches
@@ -69,13 +78,18 @@ class UserService {
         return userWithoutPassword;
     }
 
-    async getUserById(id: number) {
-        const user = await prisma.user.findUnique({
-            where: {
-                id,
-            },
-        });
-        if (!user) {
+    async getUserByIdOrEmail(id: number | null | undefined, email: string | null | undefined) {
+        let where = null;
+        if (id) {
+            where = { id };
+        } else if (email) {
+            where = { email };
+        } else {
+            throw new CustomError('User not found', 404);
+        }
+
+        const user = await prisma.user.findUnique({ where });
+        if (isNil(user)) {
             throw new CustomError('User not found', 404);
         }
 
@@ -83,6 +97,22 @@ class UserService {
 
         const { password: _, ...userWithoutPassword } = user;
         return userWithoutPassword;
+    }
+
+    async getActiveUsers() {
+        return prisma.user.findMany({
+            where: {
+                isActive: true,
+            },
+        });
+    }
+
+    async updateUser(id: number) {
+        await this.getUserByIdOrEmail(id, null);
+    }
+
+    async deleteUser(id: number) {
+        await this.getUserByIdOrEmail(id, null);
     }
 }
 

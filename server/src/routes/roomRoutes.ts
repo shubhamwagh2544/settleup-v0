@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
-import RoomController from "../controllers/roomController";
+import RoomController from '../controllers/roomController';
+import { isNil } from 'lodash';
 
 const roomController = RoomController.getInstance();
 
@@ -7,23 +8,23 @@ class RoomRoutes {
     private static instance: RoomRoutes;
     private readonly roomRouter: Router;
 
-    constructor() {
+    private constructor() {
         this.roomRouter = express.Router();
         this.initialiseRoutes();
     }
 
-    static getInstance() {
-        if (!this.instance) {
-            this.instance = new RoomRoutes();
+    public static getInstance() {
+        if (isNil(RoomRoutes.instance)) {
+            RoomRoutes.instance = new RoomRoutes();
         }
-        return this.instance;
+        return RoomRoutes.instance;
     }
 
     private initialiseRoutes() {
         this.roomRouter.post('/', roomController.createRoom);
     }
 
-    getRouter() {
+    public getRouter() {
         return this.roomRouter;
     }
 }
