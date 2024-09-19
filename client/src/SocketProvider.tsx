@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import io from 'socket.io-client';
-import Socket = SocketIOClient.Socket;
+import { io, Socket } from 'socket.io-client';
 
 // Create the context
 const SocketContext = createContext<Socket | null>(null);
@@ -19,9 +18,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
             console.log('Connected with Socket ID:', socketConnection.id);
         });
 
-        return () => {
-            socketConnection.disconnect();  // Clean up when component unmounts
-        };
+        // return () => {
+        //     socketConnection.disconnect();  // Clean up when component unmounts
+        // };
     }, []);
 
     return (

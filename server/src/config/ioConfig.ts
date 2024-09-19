@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import { app } from '../index';
 import { isNil } from 'lodash';
 
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 class IoConfig {
     private static io: Server;
@@ -16,7 +16,8 @@ class IoConfig {
                 cors: {
                     origin: ['http://localhost:5173'],
                     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-                }
+                },
+
             });
         }
         return IoConfig.io;

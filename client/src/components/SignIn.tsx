@@ -13,6 +13,12 @@ export default function SignIn() {
     const navigate = useNavigate();
     const socket = useSocket();
 
+    if (!socket) {
+        return <div>
+            <h1>Connecting...</h1>
+        </div>
+    }
+
     async function handleSubmit() {
         try {
             const response: AxiosResponse = await axios.post(`${BACKEND_URL}/users/signin`, state, {
