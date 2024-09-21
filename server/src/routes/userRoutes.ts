@@ -1,10 +1,34 @@
-import express from 'express';
-import { signIn, signUp } from '../controllers/userController';
+import express, { Router } from 'express';
+import UserController from '../controllers/userController';
+import { isNil } from 'lodash';
 
-const userRouter = express.Router();
+const userController = UserController.getInstance();
 
-userRouter.post('/signup', signUp);
+class UserRoutes {
+    private static instance: UserRoutes;
+    private readonly userRouter: Router;
 
-userRouter.post('/signin', signIn);
+    private constructor() {
+        this.userRouter = express.Router();
+        this.initialiseRoutes();
+    }
 
-export default userRouter;
+    public static getInstance() {
+        if (isNil(UserRoutes.instance)) {
+            UserRoutes.instance = new UserRoutes();
+        }
+        return UserRoutes.instance;
+    }
+
+    private initialiseRoutes() {
+        this.userRouter.post('/signup', userController.signUp);
+        this.userRouter.post('/signin', userController.signIn);
+        this.userRouter.get('/:id', userController.getUserByIdOrEmail);
+    }
+
+    public getRouter() {
+        return this.userRouter;
+    }
+}
+
+export default UserRoutes;

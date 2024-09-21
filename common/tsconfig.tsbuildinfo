@@ -1,0 +1,1 @@
+{"root":["./src/account/accounttypes.ts","./src/enums/commonenums.ts","./src/expense/expensetypes.ts","./src/room/roomtypes.ts","./src/transaction/transactiontypes.ts","./src/user/usertypes.ts","./src/user-expense/userexpensetypes.ts","./src/user-room/userroomtypes.ts"],"version":"5.6.2"}
