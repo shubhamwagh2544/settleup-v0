@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import BACKEND_URL from '../global.ts';
+import BACKEND_URL from '../config.ts';
 import { useSocket } from '@/SocketProvider.tsx';
 
 export default function SignUp() {
@@ -23,7 +23,7 @@ export default function SignUp() {
 
     async function handleSubmit() {
         try {
-            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/users/signup`, state, {
+            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/auth/signup`, state, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

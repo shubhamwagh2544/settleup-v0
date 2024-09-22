@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import DbConfig from '../config/dbConfig';
+import { isNil } from 'lodash';
+
 import errorHandler from '../middlewares/errorHandler';
 import RoomService from '../services/roomService';
-import { isNil } from 'lodash';
 
 const roomService = RoomService.getInstance();
 
@@ -24,7 +24,7 @@ class RoomController {
             const room = await roomService.createRoom(userId, name);
             return res.status(201).json(room);
         } catch (error) {
-            await DbConfig.disconnectDatabase();
+            // await DbConfig.disconnectDatabase();
             return errorHandler(error, req, res);
         }
     }

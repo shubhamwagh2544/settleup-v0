@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import BACKEND_URL from '../global.ts';
+import BACKEND_URL from '../config.ts';
 import { toast } from 'sonner';
 import { useSocket } from '@/SocketProvider.tsx';
 
@@ -14,14 +14,16 @@ export default function SignIn() {
     const socket = useSocket();
 
     if (!socket) {
-        return <div>
-            <h1>Connecting...</h1>
-        </div>
+        return (
+            <div>
+                <h1>Connecting...</h1>
+            </div>
+        );
     }
 
     async function handleSubmit() {
         try {
-            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/users/signin`, state, {
+            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/auth/signin`, state, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -38,7 +40,7 @@ export default function SignIn() {
             // const { token } = response.data;
             // localStorage.setItem('tok1en', token);
 
-            navigate('/main-room')
+            navigate('/main-room');
         } catch (error: any) {
             if (error.response.status === 404) {
                 toast.success('Account not found! Please sign up ❌');

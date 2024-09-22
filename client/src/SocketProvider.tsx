@@ -23,9 +23,5 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         // };
     }, []);
 
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    );
+    return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>;
 }
