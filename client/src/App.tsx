@@ -14,7 +14,6 @@ function App() {
                     <Route path="/main-room" element={<MainRoom />} />
                 </Routes>
             </BrowserRouter>
-
         </SocketProvider>
     );
 }

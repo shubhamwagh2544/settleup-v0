@@ -21,8 +21,6 @@ class UserRoutes {
     }
 
     private initialiseRoutes() {
-        this.userRouter.post('/signup', userController.signUp);
-        this.userRouter.post('/signin', userController.signIn);
         this.userRouter.get('/:id', userController.getUserByIdOrEmail);
     }
 
