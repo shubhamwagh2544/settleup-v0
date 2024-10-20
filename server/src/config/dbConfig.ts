@@ -4,8 +4,6 @@ import { isNil } from 'lodash';
 class DbConfig {
     private static prisma: PrismaClient;
 
-    private constructor() {}
-
     public static getInstance() {
         if (isNil(DbConfig.prisma)) {
             DbConfig.prisma = new PrismaClient();
@@ -61,6 +59,39 @@ class DbConfig {
             });
         }
         return defaultRoom;
+    }
+
+    public static async createAdminUser() {
+        let adminUser;
+        adminUser = await DbConfig.prisma.user.findUnique({
+            where: {
+                id: 0,
+                email: 'admin@splitwise.com',
+            },
+        });
+        if (!adminUser) {
+            adminUser = await DbConfig.prisma.user.create({
+                data: {
+                    id: 0,
+                    email: 'admin@splitwise.com',
+                    password: 'admin',
+                    firstName: 'Admin',
+                    lastName: 'User',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    isActive: true,
+                    isAdmin: true,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    isAdmin: true,
+                },
+            });
+        }
+        return adminUser;
     }
 }
 

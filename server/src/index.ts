@@ -35,6 +35,11 @@ DbConfig.createDefaultRoom().then((room) => {
     console.log('Default room created:', room.id);
 });
 
+// create a admin user
+DbConfig.createAdminUser().then((user) => {
+    console.log('Admin user created:', user.id);
+});
+
 // middlewares
 app.use(express.json());
 app.use(cors(corsOptions));

