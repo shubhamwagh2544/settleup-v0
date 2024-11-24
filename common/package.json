@@ -1,7 +1,7 @@
 {
   "name": "common-splitwise",
-  "version": "1.0.1",
-  "main": "dist/index.js",
+  "version": "1.0.2",
+  "main": "src/index.ts",
   "scripts": {
     "build": "npx tsc -b"
   },
@@ -13,6 +13,6 @@
     "zod": "^3.23.8"
   },
   "files": [
-    "dist/"
+    "src"
   ]
 }
