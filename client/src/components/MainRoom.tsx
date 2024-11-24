@@ -100,30 +100,51 @@ export default function MainRoom() {
                 )}
             </div>
             <div className="w-1/2">
-                <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle>Create Room</CardTitle>
-                        <CardDescription>Create your room to add expenses</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form>
-                            <div className="grid w-full items-center gap-4">
-                                <div className="flex flex-col space-y-1.5">
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input
-                                        id="name"
-                                        placeholder="Name of your room"
-                                        value={room}
-                                        onChange={(e) => setRoom(e.target.value)}
-                                    />
+                <div className="mb-4">
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle>Create Room</CardTitle>
+                            <CardDescription>Create your room to add expenses</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form>
+                                <div className="grid w-full items-center gap-4">
+                                    <div className="flex flex-col space-y-1.5">
+                                        <Label htmlFor="name">Name</Label>
+                                        <Input
+                                            id="name"
+                                            placeholder="Name of your room"
+                                            value={room}
+                                            onChange={(e) => setRoom(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                    </CardContent>
-                    <CardFooter className="flex justify-end">
-                        <Button onClick={createRoomHandler}>Create</Button>
-                    </CardFooter>
-                </Card>
+                            </form>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button onClick={createRoomHandler}>Create</Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+                <div>
+                    <h2 className="text-lg font-semibold mb-4">All Users</h2>
+                    {isEmpty(users) ? (
+                        <p>No users found.</p>
+                    ) : (
+                        <div className="list-disc list-inside">
+                            {JSON.stringify(user)}
+                            {
+                                users
+                                    .filter(u => get(u, 'id') !== get(user, 'id'))
+                                    .map((user) => (
+                                        <div key={get(user, 'id', 'N/A')} className="mb-2">
+                                            {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                        </div>
+                                    ))
+                            }
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )

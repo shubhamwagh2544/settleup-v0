@@ -30,8 +30,8 @@ class AuthController {
 
     async signUp(req: Request, res: Response) {
         try {
-            const { email, password } = req.body;
-            const user = await authService.signUp(email, password);
+            const { firstname, lastname, email, password } = req.body;
+            const user = await authService.signUp(firstname, lastname, email, password);
             return res.status(201).json(user);
         } catch (error) {
             // await DbConfig.disconnectDatabase();

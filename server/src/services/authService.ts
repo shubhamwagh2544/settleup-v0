@@ -19,9 +19,9 @@ class AuthService {
         return AuthService.instance;
     }
 
-    async signUp(email: string, password: string) {
+    async signUp(firstname: string, lastname: string, email: string, password: string) {
         // Todo: Validate inputs: zod
-        if (!email || !password) {
+        if (!email || !password || !firstname || !lastname) {
             throw new CustomError('Email and password are required', 400);
         }
         // check if user already exists
@@ -42,6 +42,8 @@ class AuthService {
 
         const user = await prisma.user.create({
             data: {
+                firstName: firstname,
+                lastName: lastname,
                 email,
                 password: hashedPassword,
             },
