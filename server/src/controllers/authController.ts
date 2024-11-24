@@ -3,8 +3,18 @@ import { isNil } from 'lodash';
 
 import errorHandler from '../middlewares/errorHandler';
 import AuthService from '../services/authService';
+import UserService from '../services/userService';
 
 const authService = AuthService.getInstance();
+const userService = UserService.getInstance();
+
+declare global {
+    namespace Express {
+        interface Request {
+            userId?: number;
+        }
+    }
+}
 
 class AuthController {
     private static instance: AuthController;
@@ -36,6 +46,16 @@ class AuthController {
             return res.status(200).json(user);
         } catch (error) {
             // await DbConfig.disconnectDatabase();
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async fetchLoggedInUser(req: Request, res: Response) {
+        try {
+            const userId = req.userId;
+            const user = await userService.getUserByIdOrEmail(userId, null);
+            return res.status(200).json(user);
+        } catch (error) {
             return errorHandler(error, req, res);
         }
     }

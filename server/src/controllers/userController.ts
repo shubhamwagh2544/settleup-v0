@@ -27,6 +27,15 @@ class UserController {
             return errorHandler(error, req, res);
         }
     }
+
+    async getUsers(req: Request, res: Response) {
+        try {
+            const users = await userService.getUsers();
+            return res.status(200).json(users);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
 }
 
 export default UserController;

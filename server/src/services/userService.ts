@@ -38,10 +38,13 @@ class UserService {
         return userWithoutPassword;
     }
 
-    async getActiveUsers() {
+    async getUsers() {
         return prisma.user.findMany({
             where: {
                 isActive: true,
+                id: {
+                    not: 0,
+                }
             },
         });
     }

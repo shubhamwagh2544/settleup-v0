@@ -63,6 +63,8 @@ class AuthService {
                 id: true,
                 email: true,
                 password: true,
+                firstName: true,
+                lastName: true,
             },
         });
 

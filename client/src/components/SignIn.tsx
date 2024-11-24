@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import BACKEND_URL from '../config.ts';
 import { toast } from 'sonner';
 import { useSocket } from '@/SocketProvider.tsx';
+import { get } from 'lodash';
 
 export default function SignIn() {
     const [state, setState] = useState({
@@ -34,7 +35,7 @@ export default function SignIn() {
                 console.log('user', user);
                 socket?.emit('joinDefaultRoom', { user });
 
-                toast.success(`Welcome, ${user?.email} 👋`);
+                toast.success(`Welcome! ${get(user, 'firstName', "")} ${get(user, 'lastName', "")} 👋`);
             }
 
             // const { token } = response.data;

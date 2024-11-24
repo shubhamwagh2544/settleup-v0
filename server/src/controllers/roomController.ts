@@ -28,6 +28,35 @@ class RoomController {
             return errorHandler(error, req, res);
         }
     }
+
+    async getRooms(req: Request, res: Response) {
+        try {
+            const rooms = await roomService.getRooms();
+            return res.status(200).json(rooms);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getRoomsByUserId(req: Request, res: Response) {
+        try {
+            const { userId } = req.params;
+            const rooms = await roomService.getRoomsByUserId(parseInt(userId));
+            return res.status(200).json(rooms);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getRoomById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const room = await roomService.getRoomById(parseInt(id));
+            return res.status(200).json(room);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
 }
 
 export default RoomController;

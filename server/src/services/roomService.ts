@@ -1,8 +1,10 @@
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
 import { isNil } from 'lodash';
+import UserService from './userService';
 
 const prisma = DbConfig.getInstance();
+const userService = UserService.getInstance();
 
 class RoomService {
     private static instance: RoomService;
@@ -77,6 +79,49 @@ class RoomService {
             });
         }
         // if admin, he already in the room after creating it
+    }
+
+    async getRooms() {
+        return prisma.room.findMany({
+            where: {
+                isActive: true,
+            },
+            include: {
+                users: true,
+            },
+        });
+    }
+
+    async getRoomsByUserId(userId: number) {
+        const user = await userService.getUserByIdOrEmail(userId, null);
+        if (isNil(user)) {
+            throw new CustomError('User not found', 404);
+        }
+        return prisma.userRoom.findMany({
+            where: {
+                userId,
+            },
+            include: {
+                room: true,
+            },
+        })
+    }
+
+    async getRoomById(roomId: number) {
+        // check if room exists
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId,
+                isActive: true,
+            },
+            include: {
+                users: true,
+            },
+        });
+        if (isNil(room)) {
+            throw new CustomError('Room not found', 404);
+        }
+        return room;
     }
 }
 

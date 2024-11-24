@@ -1,12 +1,15 @@
 import axios, { AxiosResponse } from 'axios';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import BACKEND_URL from '../config.ts';
 import { useSocket } from '@/SocketProvider.tsx';
+import { get } from 'lodash';
 
 export default function SignUp() {
     const [state, setState] = useState({
+        firstname: '',
+        lastname: '',
         email: '',
         password: '',
     });
@@ -33,7 +36,7 @@ export default function SignUp() {
                 const user = response.data;
                 socket?.emit('joinDefaultRoom', { user });
 
-                toast.success(`Welcome, ${user?.email} 👋`);
+                toast.success(`Welcome! ${get(user, 'firstName', "")} ${get(user, 'lastName', "")} 👋`);
             }
 
             // const { token } = response.data;
@@ -54,6 +57,22 @@ export default function SignUp() {
             <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-lg">
                 <h1 className="text-3xl font-bold text-center text-purple-700">Hola 👋</h1>
                 <div className="flex flex-col gap-4 mt-5">
+                    <input
+                        type="text"
+                        name="firstname"
+                        placeholder="Firstname"
+                        className="p-3 border border-gray-300 rounded"
+                        required
+                        onChange={handleInputChange}
+                    />
+                    <input
+                        type="text"
+                        name="lastname"
+                        placeholder="Lastname"
+                        className="p-3 border border-gray-300 rounded"
+                        required
+                        onChange={handleInputChange}
+                    />
                     <input
                         type="text"
                         name="email"

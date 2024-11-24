@@ -22,6 +22,9 @@ class RoomRoutes {
 
     private initialiseRoutes() {
         this.roomRouter.post('/', roomController.createRoom);
+        this.roomRouter.get('/', roomController.getRooms);
+        this.roomRouter.get('/room-user/:userId', roomController.getRoomsByUserId);
+        this.roomRouter.get('/:id', roomController.getRoomById);
     }
 
     public getRouter() {

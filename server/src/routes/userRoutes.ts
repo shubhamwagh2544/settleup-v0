@@ -22,6 +22,7 @@ class UserRoutes {
 
     private initialiseRoutes() {
         this.userRouter.get('/:id', userController.getUserByIdOrEmail);
+        this.userRouter.get('/', userController.getUsers);
     }
 
     public getRouter() {

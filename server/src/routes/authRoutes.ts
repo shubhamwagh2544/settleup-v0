@@ -23,6 +23,7 @@ class AuthRoutes {
     private initialiseRoutes() {
         this.authRouter.post('/signup', authController.signUp);
         this.authRouter.post('/signin', authController.signIn);
+        this.authRouter.get('/me', authController.fetchLoggedInUser);
     }
 
     public getRouter() {
