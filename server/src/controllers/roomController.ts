@@ -50,9 +50,19 @@ class RoomController {
 
     async getRoomById(req: Request, res: Response) {
         try {
-            const { id } = req.params;
-            const room = await roomService.getRoomById(parseInt(id));
+            const { roomId } = req.params;
+            const room = await roomService.getRoomById(parseInt(roomId));
             return res.status(200).json(room);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getUsersByRoomId(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params;
+            const users = await roomService.getUsersByRoomId(parseInt(roomId));
+            return res.status(200).json(users);
         } catch (error) {
             return errorHandler(error, req, res);
         }

@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 import UserController from '../controllers/userController';
 import { isNil } from 'lodash';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const userController = UserController.getInstance();
 
@@ -21,8 +22,8 @@ class UserRoutes {
     }
 
     private initialiseRoutes() {
-        this.userRouter.get('/:id', userController.getUserByIdOrEmail);
-        this.userRouter.get('/', userController.getUsers);
+        this.userRouter.get('/:id', authMiddleware, userController.getUserByIdOrEmail);
+        this.userRouter.get('/', authMiddleware, userController.getUsers);
     }
 
     public getRouter() {

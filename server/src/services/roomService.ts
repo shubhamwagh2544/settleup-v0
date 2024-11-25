@@ -123,6 +123,23 @@ class RoomService {
         }
         return room;
     }
+
+    async getUsersByRoomId(roomId: number) {
+        // check if room exists
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId,
+                isActive: true,
+            },
+            include: {
+                users: true,
+            },
+        });
+        if (isNil(room)) {
+            throw new CustomError('Room not found', 404);
+        }
+        return room.users;
+    }
 }
 
 export default RoomService;

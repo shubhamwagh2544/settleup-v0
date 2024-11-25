@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
@@ -26,12 +26,14 @@ export default function MainRoom() {
     // const { user, loading } = useLoggedInUser();
     const userId = get(location, 'state.userId', null);
 
-    console.log('state: ', location.state);
-
     useEffect(() => {
         // Fetch all users
         async function fetchUsers() {
-            const response = await axios.get(`${BACKEND_URL}/users`);
+            const response = await axios.get(`${BACKEND_URL}/users`, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
             setUsers(response.data);
         }
         fetchUsers()
@@ -40,7 +42,11 @@ export default function MainRoom() {
 
         // Fetch all rooms
         async function fetchRooms() {
-            const response = await axios.get(`${BACKEND_URL}/rooms/room-user/${userId}`);
+            const response = await axios.get(`${BACKEND_URL}/rooms/${userId}/rooms`, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
             setRooms(response.data);
         }
         fetchRooms()
@@ -49,16 +55,25 @@ export default function MainRoom() {
     }, []);
 
     async function createRoomHandler() {
-        if (isEmpty(room) || isNil(room)) {
+        if (isEmpty(room.trim()) || isNil(room)) {
             toast.error('Room name is required');
+            setRoom("");
         }
         try {
-            const response = await axios.post(`${BACKEND_URL}/rooms`);
-            const room= response.data;
+            const response = await axios.post(`${BACKEND_URL}/rooms`, {name: room, userId}, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
+                }
+            } );
+            const data = response.data;
             if (response.status === 201) {
-                navigate(`/room/${room.id}`);
+                navigate(`/room/${data.id}`);
             }
         } catch (error: any) {
+            if (error.status === 409) {
+                toast.error('Room already exists');
+                setRoom("");
+            }
             console.error('error creating room', error);
         }
     }
@@ -79,9 +94,11 @@ export default function MainRoom() {
                     <p>No rooms found. Create a new room to get started!</p>
                 ) : (
                     <ul className="list-disc list-inside">
-                        {rooms.map((room) => (
-                            <li key={get(room, 'id', 'N/A')} className="mb-2">
-                                {get(room, 'name', 'N/A')}
+                        {rooms.map((data) => (
+                            <li key={get(data, 'room.id', 'N/A')} className="mb-2">
+                                <Link to={`/room/${get(data, 'room.id', 'N/A')}`}>
+                                    {get(data, 'room.name', 'N/A')}
+                                </Link>
                             </li>
                         ))}
                     </ul>
@@ -120,19 +137,17 @@ export default function MainRoom() {
                         <p>No users found.</p>
                     ) : (
                         <div className="list-disc list-inside">
-                            {
-                                users
-                                    .filter(u => get(u, 'id') !== userId)
-                                    .map((user) => (
-                                        <div key={get(user, 'id', 'N/A')} className="mb-2">
-                                            {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
-                                        </div>
-                                    ))
-                            }
+                            {users
+                                .filter((u) => get(u, 'id') !== userId)
+                                .map((user) => (
+                                    <div key={get(user, 'id', 'N/A')} className="mb-2">
+                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                    </div>
+                                ))}
                         </div>
                     )}
                 </div>
             </div>
         </div>
-    )
+    );
 }

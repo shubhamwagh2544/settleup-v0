@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 import RoomController from '../controllers/roomController';
 import { isNil } from 'lodash';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const roomController = RoomController.getInstance();
 
@@ -21,10 +22,11 @@ class RoomRoutes {
     }
 
     private initialiseRoutes() {
-        this.roomRouter.post('/', roomController.createRoom);
-        this.roomRouter.get('/', roomController.getRooms);
-        this.roomRouter.get('/room-user/:userId', roomController.getRoomsByUserId);
-        this.roomRouter.get('/:id', roomController.getRoomById);
+        this.roomRouter.post('/', authMiddleware, roomController.createRoom);
+        this.roomRouter.get('/', authMiddleware, roomController.getRooms);
+        this.roomRouter.get('/:userId/rooms', authMiddleware, roomController.getRoomsByUserId);
+        this.roomRouter.get('/:roomId/users', authMiddleware, roomController.getUsersByRoomId);
+        this.roomRouter.get('/:roomId', authMiddleware, roomController.getRoomById);
     }
 
     public getRouter() {
