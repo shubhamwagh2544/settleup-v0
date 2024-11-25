@@ -31,17 +31,22 @@ export default function SignIn() {
             });
             if (response.status === 200) {
                 // socket logic to join default room
-                const user = response.data;
+                const user = response.data.user;
+                const token = response.data.token;
+
                 console.log('user', user);
                 socket?.emit('joinDefaultRoom', { user });
 
                 toast.success(`Welcome! ${get(user, 'firstName', "")} ${get(user, 'lastName', "")} 👋`);
+
+                localStorage.setItem('token', token);
+                console.log('userId while navigating: ', user.id);
+                navigate(`/main-room`, { state: { userId: user.id } });
             }
-
-            // const { token } = response.data;
-            // localStorage.setItem('tok1en', token);
-
-            navigate('/main-room');
+            else {
+                toast.error('Something went wrong ❌');
+                navigate('/signin');
+            }
         } catch (error: any) {
             if (error.response.status === 404) {
                 toast.success('Account not found! Please sign up ❌');

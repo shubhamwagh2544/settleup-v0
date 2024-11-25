@@ -2,6 +2,7 @@ import express, { Router } from 'express';
 import { isNil } from 'lodash';
 
 import AuthController from '../controllers/authController';
+import { authMiddleware } from '../middlewares/authMiddleware';
 const authController = AuthController.getInstance();
 
 class AuthRoutes {
@@ -23,7 +24,7 @@ class AuthRoutes {
     private initialiseRoutes() {
         this.authRouter.post('/signup', authController.signUp);
         this.authRouter.post('/signin', authController.signIn);
-        this.authRouter.get('/me', authController.fetchLoggedInUser);
+        this.authRouter.get('/me', authMiddleware, authController.fetchLoggedInUser);
     }
 
     public getRouter() {

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
@@ -14,15 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { toast } from 'sonner';
-import { useLoggedInUser } from '@/hooks/useLoggedInUser.ts';
 
 export default function MainRoom() {
 
@@ -30,10 +22,13 @@ export default function MainRoom() {
     const [rooms, setRooms] = useState([]);
     const [users, setUsers] = useState([]);
     const navigate = useNavigate();
-    const { user, loading, error } = useLoggedInUser();
+    const location = useLocation();
+    // const { user, loading } = useLoggedInUser();
+    const userId = get(location, 'state.userId', null);
+
+    console.log('state: ', location.state);
 
     useEffect(() => {
-
         // Fetch all users
         async function fetchUsers() {
             const response = await axios.get(`${BACKEND_URL}/users`);
@@ -45,7 +40,7 @@ export default function MainRoom() {
 
         // Fetch all rooms
         async function fetchRooms() {
-            const response = await axios.get(`${BACKEND_URL}/rooms/room-user/`);
+            const response = await axios.get(`${BACKEND_URL}/rooms/room-user/${userId}`);
             setRooms(response.data);
         }
         fetchRooms()
@@ -68,13 +63,6 @@ export default function MainRoom() {
         }
     }
 
-    if (loading) {
-        return (
-            <div>
-                <h1>Something went wrong...</h1>
-            </div>
-        );
-    }
     if (isEmpty(users)) {
         return (
             <div>
@@ -132,10 +120,9 @@ export default function MainRoom() {
                         <p>No users found.</p>
                     ) : (
                         <div className="list-disc list-inside">
-                            {JSON.stringify(user)}
                             {
                                 users
-                                    .filter(u => get(u, 'id') !== get(user, 'id'))
+                                    .filter(u => get(u, 'id') !== userId)
                                     .map((user) => (
                                         <div key={get(user, 'id', 'N/A')} className="mb-2">
                                             {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}

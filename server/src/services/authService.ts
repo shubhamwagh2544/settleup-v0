@@ -1,8 +1,10 @@
 import { isNil } from 'lodash';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 import CustomError from '../error/customError';
 import DbConfig from '../config/dbConfig';
+import { JWT_SECRET } from '../config/config';
 
 const prisma = DbConfig.getInstance();
 
@@ -49,10 +51,15 @@ class AuthService {
             },
         });
 
+        // create a token
+        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
         // todo: joins default room
 
         const { password: _, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return [ userWithoutPassword, token ];
     }
 
     async signIn(email: string, password: string) {
@@ -83,8 +90,13 @@ class AuthService {
             }
         }
 
+        // create a token
+        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
         const { password: _, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return [ userWithoutPassword, token ];
     }
 }
 

@@ -12,6 +12,7 @@ declare global {
     namespace Express {
         interface Request {
             userId?: number;
+            email?: string;
         }
     }
 }
@@ -31,8 +32,8 @@ class AuthController {
     async signUp(req: Request, res: Response) {
         try {
             const { firstname, lastname, email, password } = req.body;
-            const user = await authService.signUp(firstname, lastname, email, password);
-            return res.status(201).json(user);
+            const [ user, token ] = await authService.signUp(firstname, lastname, email, password);
+            return res.status(201).json({user, token});
         } catch (error) {
             // await DbConfig.disconnectDatabase();
             return errorHandler(error, req, res);
@@ -42,8 +43,8 @@ class AuthController {
     async signIn(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
-            const user = await authService.signIn(email, password);
-            return res.status(200).json(user);
+            const [ user, token ] = await authService.signIn(email, password);
+            return res.status(200).json({ user, token });
         } catch (error) {
             // await DbConfig.disconnectDatabase();
             return errorHandler(error, req, res);

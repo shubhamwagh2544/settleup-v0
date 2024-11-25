@@ -11,7 +11,11 @@ export function useLoggedInUser() {
     useEffect(() => {
         async function fetchUser() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/auth/me`);
+                const response = await axios.get(`${BACKEND_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    }
+                });
                 setUser(response.data);
             } catch (err: any) {
                 setError(err.message);

@@ -33,16 +33,19 @@ export default function SignUp() {
             });
             if (response.status === 201) {
                 // socket logic to join default room
-                const user = response.data;
+                const user = response.data.user;
                 socket?.emit('joinDefaultRoom', { user });
 
                 toast.success(`Welcome! ${get(user, 'firstName', "")} ${get(user, 'lastName', "")} 👋`);
+
+                const token = response.data.token;
+                localStorage.setItem('token', token);
+
+                navigate(`/main-room`, { state: { userId: user.id } });
+            } else {
+                toast.error('Something went wrong ❌');
+                navigate('/signin');
             }
-
-            // const { token } = response.data;
-            // localStorage.setItem('token', token);
-
-            navigate('/main-room');
         } catch (error: any) {
             if (error.response.status === 409) {
                 toast.success('Account already exists! Please sign in ❌');
