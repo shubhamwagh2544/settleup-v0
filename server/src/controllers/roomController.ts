@@ -67,6 +67,17 @@ class RoomController {
             return errorHandler(error, req, res);
         }
     }
+
+    async addUsersToRoom(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params;
+            const { userIds } = req.body;
+            await roomService.addUsersToRoom(parseInt(roomId), userIds);
+            return res.status(200).json({ message: 'Users added to room' });
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
 }
 
 export default RoomController;

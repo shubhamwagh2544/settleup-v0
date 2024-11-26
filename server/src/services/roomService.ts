@@ -149,6 +149,40 @@ class RoomService {
             },
         });
     }
+
+    async addUsersToRoom(roomId: number, userIds: number[]) {
+        // check if room exists
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId,
+                isActive: true,
+            },
+        });
+        if (isNil(room)) {
+            throw new CustomError('Room not found', 404);
+        }
+
+        // check if users exist
+        const users = await prisma.user.findMany({
+            where: {
+                id: {
+                    in: userIds,
+                },
+            },
+        });
+        if (users.length !== userIds.length) {
+            throw new CustomError('One or more users not found', 404);
+        }
+
+        // add users to the room
+        await prisma.userRoom.createMany({
+            data: userIds.map((userId) => ({
+                userId,
+                roomId,
+                isAdmin: false,
+            })),
+        });
+    }
 }
 
 export default RoomService;
