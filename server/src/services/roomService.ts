@@ -1,6 +1,6 @@
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
-import { isNil } from 'lodash';
+import { isNil, map } from 'lodash';
 import UserService from './userService';
 
 const prisma = DbConfig.getInstance();
@@ -104,7 +104,7 @@ class RoomService {
             include: {
                 room: true,
             },
-        })
+        });
     }
 
     async getRoomById(roomId: number) {
@@ -138,7 +138,16 @@ class RoomService {
         if (isNil(room)) {
             throw new CustomError('Room not found', 404);
         }
-        return room.users;
+
+        // room.users contain user-room relations
+        const userIds = map(room.users, 'userId');
+        return prisma.user.findMany({
+            where: {
+                id: {
+                    in: userIds,
+                },
+            },
+        });
     }
 }
 
