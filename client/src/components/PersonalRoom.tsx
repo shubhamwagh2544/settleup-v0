@@ -21,7 +21,7 @@ import { useState } from 'react';
 export default function PersonalRoom() {
     const { roomId } = useParams();
     const [room, setRoom] = useState(null);
-    const [users, setUsers] = useState([]);
+    const [roomUsers, setRoomUsers] = useState([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isAddUsersDialogOpen, setIsAddUsersDialogOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
@@ -43,20 +43,20 @@ export default function PersonalRoom() {
                     },
                 });
                 setRoom(response.data);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error fetching room', error);
                 toast.error('Error fetching room');
             }
         }
 
-        async function fetchUsers() {
+        async function fetchRoomUsers() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/rooms/${roomId}/users`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
-                setUsers(response.data);
+                setRoomUsers(response.data);
             } catch (error) {
                 console.error('Error fetching users', error);
                 toast.error('Error fetching users');
@@ -71,14 +71,14 @@ export default function PersonalRoom() {
                     },
                 });
                 setAllUsers(response.data);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error fetching users', error);
                 toast.error('Error fetching users');
             }
         }
 
         fetchRoom();
-        fetchUsers();
+        fetchRoomUsers();
 
         if (isAddUsersDialogOpen) {
             fetchAllUsers();
@@ -110,9 +110,17 @@ export default function PersonalRoom() {
             toast.success('Users added to the room');
             setIsAddUsersDialogOpen(false);
             setSelectedUsers([]);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error adding users to room', error);
-            toast.error('Error adding users to room');
+            if (error.response.data && error.response.data.statusCode === 409) {
+                toast.error(error.response.data.message);
+            }
+            else if (error.response.data && error.response.data.statusCode === 400) {
+                toast.error(error.response.data.message);
+            }
+            else {
+                toast.error('Error adding user to room');
+            }
         }
     }
 
@@ -139,11 +147,12 @@ export default function PersonalRoom() {
                     </div>
                     <div className="w-1/2 pl-4">
                         <h2 className="text-lg font-semibold mb-4">Users in this room</h2>
-                        {isEmpty(users) ? (
+                        {isEmpty(roomUsers) ? (
                             <p>No users found.</p>
                         ) : (
                             <ul className="list-disc list-inside">
-                                {users.map((user) => (
+                                {roomUsers
+                                    .map((user) => (
                                     <li key={get(user, 'id', 'N/A')}>
                                         {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
                                     </li>
@@ -190,7 +199,7 @@ export default function PersonalRoom() {
                                 </div>
                                 <p>Paid by You and Split equally with:</p>
                                 <ul>
-                                    {users
+                                    {roomUsers
                                         .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
                                         .map((user) => (
                                             <li key={get(user, 'id')}>
@@ -222,28 +231,34 @@ export default function PersonalRoom() {
                             </DialogHeader>
                             <div className="space-y-4">
                                 {allUsers
-                                    .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
-                                    .map((user) => (
-                                        <div key={get(user, 'id')}>
-                                            <Label htmlFor={`user-${get(user, 'id')}`}>
-                                                <input
-                                                    type="checkbox"
-                                                    id={`user-${get(user, 'id')}`}
-                                                    value={get(user, 'id')}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedUsers([...selectedUsers, get(user, 'id')]);
-                                                        } else {
-                                                            setSelectedUsers(
-                                                                selectedUsers.filter((id) => id !== get(user, 'id'))
-                                                            );
-                                                        }
-                                                    }}
-                                                />
-                                                {get(user, 'firstName')} {get(user, 'lastName')}
-                                            </Label>
-                                        </div>
-                                    ))}
+                                    .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                                        .length > 0 ? (
+                                        allUsers
+                                            .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                                            .map((user) => (
+                                                <div key={get(user, 'id')}>
+                                                    <Label htmlFor={`user-${get(user, 'id')}`}>
+                                                        <input
+                                                            type="checkbox"
+                                                            id={`user-${get(user, 'id')}`}
+                                                            value={get(user, 'id')}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedUsers([...selectedUsers, get(user, 'id')]);
+                                                                } else {
+                                                                    setSelectedUsers(
+                                                                        selectedUsers.filter((id) => id !== get(user, 'id'))
+                                                                    );
+                                                                }
+                                                            }}
+                                                        />
+                                                        {get(user, 'firstName')} {get(user, 'lastName')}
+                                                    </Label>
+                                                </div>
+                                            ))
+                                    ) : (
+                                        <p>No users available.</p>
+                                    )}
                             </div>
                             <DialogFooter>
                                 <Button variant="default" onClick={handleAddUsers}>

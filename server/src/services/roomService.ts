@@ -151,6 +151,13 @@ class RoomService {
     }
 
     async addUsersToRoom(roomId: number, userIds: number[]) {
+        // make userIds unique
+        userIds = Array.from(new Set(userIds));
+
+        if (!userIds.length) {
+            throw new CustomError('User IDs are required', 400);
+        }
+
         // check if room exists
         const room = await prisma.room.findUnique({
             where: {
@@ -172,6 +179,19 @@ class RoomService {
         });
         if (users.length !== userIds.length) {
             throw new CustomError('One or more users not found', 404);
+        }
+
+        // check if user already in the room
+        const existingUsers = await prisma.userRoom.findMany({
+            where: {
+                roomId,
+                userId: {
+                    in: userIds,
+                },
+            },
+        });
+        if (existingUsers.length) {
+            throw new CustomError('One or more users already exist in the room', 409);
         }
 
         // add users to the room
