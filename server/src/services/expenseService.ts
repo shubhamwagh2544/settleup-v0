@@ -49,59 +49,67 @@ class ExpenseService {
             throw new CustomError('Expense splitter Users not part of the room', 404);
         }
 
-        // create the expense
-        const expense = await prisma.expense.create({
-            data: {
-                name,
-                description,
-                amount,
-                roomId,
-            },
-        });
-        // add the expense to the room
-        const room = await prisma.room.update({
-            where: {
-                id: roomId,
-            },
-            data: {
-                expenses: {
-                    connect: {
+        try {
+            // prisma transaction
+            await prisma.$transaction(async (prisma) => {
+                // create the expense
+                const expense = await prisma.expense.create({
+                    data: {
+                        name,
+                        description,
+                        amount,
+                        roomId,
+                    },
+                });
+                // add the expense to the room
+                const room = await prisma.room.update({
+                    where: {
+                        id: roomId,
+                    },
+                    data: {
+                        expenses: {
+                            connect: {
+                                id: expense.id,
+                            },
+                        },
+                    },
+                });
+
+                // add the expense to the creator
+                const userExpense = await prisma.userExpense.create({
+                    data: {
+                        userId,
+                        expenseId: expense.id,
+                        isLender: true,
+                    },
+                });
+
+                // add the expense to the users
+                const expenseUsers = await prisma.userExpense.createMany({
+                    data: map(splitWith, (userId) => {
+                        return {
+                            userId,
+                            expenseId: expense.id,
+                            isLender: false,
+                            amountOwed: amount / (splitWith.length + 1),
+                        };
+                    }),
+                });
+
+                return prisma.expense.findUnique({
+                    where: {
                         id: expense.id,
                     },
-                },
-            },
-        });
-
-        // add the expense to the creator
-        const userExpense = await prisma.userExpense.create({
-            data: {
-                userId,
-                expenseId: expense.id,
-                isLender: true,
-            },
-        });
-
-        // add the expense to the users
-        const expenseUsers = await prisma.userExpense.createMany({
-            data: map(splitWith, (userId) => {
-                return {
-                    userId,
-                    expenseId: expense.id,
-                    isLender: false,
-                    amountOwed: amount / splitWith.length,
-                };
-            }),
-        })
-
-        return prisma.expense.findUnique({
-            where: {
-                id: expense.id,
-            },
-            include: {
-                users: true,
-                room: true,
-            },
-        })
+                    include: {
+                        users: true,
+                        room: true,
+                    },
+                })
+            });
+        } catch (error: any) {
+            console.log('Error while creating expense: ', error);
+            throw error;
+        }
     }
 }
 
