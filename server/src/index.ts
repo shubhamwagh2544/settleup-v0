@@ -8,14 +8,16 @@ import UserRoutes from './routes/userRoutes';
 import RoomRoutes from './routes/roomRoutes';
 import DbConfig from './config/dbConfig';
 import AuthRoutes from './routes/authRoutes';
+import ExpenseRoutes from './routes/expenseRoutes';
 
 export const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
 
+const authRoutes = AuthRoutes.getInstance();
 const userRoutes = UserRoutes.getInstance();
 const roomRoutes = RoomRoutes.getInstance();
-const authRoutes = AuthRoutes.getInstance();
+const expenseRoutes = ExpenseRoutes.getInstance();
 
 io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
@@ -47,6 +49,7 @@ app.use(cors(corsOptions));
 app.use('/api/auth', authRoutes.getRouter());
 app.use('/api/users', userRoutes.getRouter());
 app.use('/api/rooms', roomRoutes.getRouter());
+app.use('/api/expenses', expenseRoutes.getRouter());
 
 // health check
 app.get('/health', (req: Request, res: Response) => {

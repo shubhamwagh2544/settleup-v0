@@ -124,9 +124,42 @@ export default function PersonalRoom() {
         }
     }
 
-    function handleCreateExpense() {
+    async function handleCreateExpense() {
         console.log('Create expense', { expenseName, expenseDescription, expenseAmount });
-        handleDialogClose();
+        if (isEmpty(expenseName.trim()) || isEmpty(expenseAmount.trim())) {
+            toast.error('Expense name and amount are required');
+            return;
+        }
+        if (isNaN(parseFloat(expenseAmount))) {
+            toast.error('Expense amount must be a number');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${BACKEND_URL}/expenses`,
+                {
+                    userId: get(room, 'users[0].userId'),
+                    roomId: roomId ? parseInt(roomId) : null,
+                    name: expenseName,
+                    description: expenseDescription,
+                    amount: parseFloat(expenseAmount),
+                    splitWith: roomUsers.filter((user) => get(user, 'id') !== get(room, 'users[0].userId')).map((user) => get(user, 'id')),
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
+                }
+            );
+            console.log('Expense created', response.data);
+            toast.success('Expense created successfully');
+            handleDialogClose();
+        } catch (error: any) {
+            console.error('Error creating expense', error);
+            toast.error('Error creating expense');
+            handleDialogClose();
+        }
     }
 
     if (isEmpty(room) || isNil(room)) {
@@ -260,14 +293,16 @@ export default function PersonalRoom() {
                                         <p>No users available.</p>
                                     )}
                             </div>
-                            <DialogFooter>
-                                <Button variant="default" onClick={handleAddUsers}>
-                                    Add
-                                </Button>
-                                <Button variant="secondary" onClick={() => setIsAddUsersDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                            </DialogFooter>
+                            {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))).length > 0 && (
+                                <DialogFooter>
+                                    <Button variant="default" onClick={handleAddUsers}>
+                                        Add
+                                    </Button>
+                                    <Button variant="secondary" onClick={() => setIsAddUsersDialogOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                </DialogFooter>
+                            )}
                         </DialogContent>
                     </Dialog>
                 </div>

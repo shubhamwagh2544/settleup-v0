@@ -85,6 +85,7 @@ model UserExpense {
 
   isLender   Boolean  @default(false) @map("is_lender")
   amountOwed Decimal? @map("amount_owed")
+  isSettled  Boolean  @default(false) @map("is_settled")
 
   @@unique([userId, expenseId])
 }
