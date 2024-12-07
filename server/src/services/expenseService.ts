@@ -111,6 +111,31 @@ class ExpenseService {
             throw error;
         }
     }
+
+    async getExpensesForRoom(roomId: number) {
+        if (isNil(roomId)) {
+            throw new CustomError('Invalid RoomId', 400);
+        }
+
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId,
+            },
+            include: {
+                expenses: {
+                    include: {
+                        users: true,
+                    },
+                },
+            },
+        });
+
+        if (isNil(room)) {
+            throw new CustomError('Room with expense and users not found', 404);
+        }
+
+        return room.expenses || [];
+    }
 }
 
 export default ExpenseService;

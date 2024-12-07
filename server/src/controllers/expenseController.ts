@@ -28,6 +28,16 @@ class ExpenseController {
         }
     }
 
+    async getExpensesForRoom(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params;
+            const expenses = await expenseService.getExpensesForRoom(Number(roomId));
+            return res.status(200).json(expenses);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
 }
 
 export default ExpenseController;

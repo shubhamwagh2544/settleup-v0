@@ -47,9 +47,9 @@ app.use(express.json());
 app.use(cors(corsOptions));
 
 app.use('/api/auth', authRoutes.getRouter());
-app.use('/api/users', userRoutes.getRouter());
-app.use('/api/rooms', roomRoutes.getRouter());
-app.use('/api/expenses', expenseRoutes.getRouter());
+app.use('/api/user', userRoutes.getRouter());
+app.use('/api/room', roomRoutes.getRouter());
+app.use('/api/expense', expenseRoutes.getRouter());
 
 // health check
 app.get('/health', (req: Request, res: Response) => {
