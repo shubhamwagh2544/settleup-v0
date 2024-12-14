@@ -49,6 +49,7 @@ class ExpenseService {
             throw new CustomError('Expense splitter Users not part of the room', 404);
         }
 
+        let data;
         try {
             // prisma transaction
             await prisma.$transaction(async (prisma) => {
@@ -96,16 +97,10 @@ class ExpenseService {
                     }),
                 });
 
-                return prisma.expense.findUnique({
-                    where: {
-                        id: expense.id,
-                    },
-                    include: {
-                        users: true,
-                        room: true,
-                    },
-                })
+                data = {expense, room, userExpense, expenseUsers};
             });
+
+            return data;
         } catch (error: any) {
             console.log('Error while creating expense: ', error);
             throw error;
