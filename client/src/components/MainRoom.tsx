@@ -29,7 +29,7 @@ export default function MainRoom() {
     useEffect(() => {
         // Fetch all users
         async function fetchUsers() {
-            const response = await axios.get(`${BACKEND_URL}/users`, {
+            const response = await axios.get(`${BACKEND_URL}/user`, {
                 headers: {
                     "Authorization": `Bearer ${localStorage.getItem('token')}`,
                 }
@@ -42,7 +42,7 @@ export default function MainRoom() {
 
         // Fetch all rooms
         async function fetchRooms() {
-            const response = await axios.get(`${BACKEND_URL}/rooms/${userId}/rooms`, {
+            const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
                 headers: {
                     "Authorization": `Bearer ${localStorage.getItem('token')}`,
                 }
@@ -60,7 +60,7 @@ export default function MainRoom() {
             setRoom("");
         }
         try {
-            const response = await axios.post(`${BACKEND_URL}/rooms`, {name: room, userId}, {
+            const response = await axios.post(`${BACKEND_URL}/room`, {name: room, userId}, {
                 headers: {
                     "Authorization": `Bearer ${localStorage.getItem('token')}`,
                 }

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
@@ -29,6 +29,7 @@ export default function PersonalRoom() {
     const [expenseAmount, setExpenseAmount] = useState('');
     const [allUsers, setAllUsers] = useState([]);
     const [selectedUsers, setSelectedUsers] = useState([]);
+    const navigate = useNavigate();
 
     function createExpenseHandler() {
         setIsDialogOpen(true);
@@ -37,7 +38,7 @@ export default function PersonalRoom() {
     useEffect(() => {
         async function fetchRoom() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/rooms/${roomId}`, {
+                const response = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
@@ -51,7 +52,7 @@ export default function PersonalRoom() {
 
         async function fetchRoomUsers() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/rooms/${roomId}/users`, {
+                const response = await axios.get(`${BACKEND_URL}/room/${roomId}/users`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
@@ -65,7 +66,7 @@ export default function PersonalRoom() {
 
         async function fetchAllUsers() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/users`, {
+                const response = await axios.get(`${BACKEND_URL}/user`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
@@ -95,7 +96,7 @@ export default function PersonalRoom() {
     async function handleAddUsers() {
         try {
             const response = await axios.post(
-                `${BACKEND_URL}/rooms/${roomId}/users`,
+                `${BACKEND_URL}/room/${roomId}/users`,
                 {
                     userIds: selectedUsers,
                 },
@@ -137,7 +138,7 @@ export default function PersonalRoom() {
 
         try {
             const response = await axios.post(
-                `${BACKEND_URL}/expenses`,
+                `${BACKEND_URL}/expense`,
                 {
                     userId: get(room, 'users[0].userId'),
                     roomId: roomId ? parseInt(roomId) : null,
@@ -173,12 +174,7 @@ export default function PersonalRoom() {
                     <CardTitle>{get(room, 'name', 'Room')}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex">
-                    <div className="w-1/2 pr-4">
-                        <h2 className="text-lg font-semibold mb-4">Expenses in this room</h2>
-                        {/* logic to display expenses*/}
-                        <p>No expenses found.</p>
-                    </div>
-                    <div className="w-1/2 pl-4">
+                    <div>
                         <h2 className="text-lg font-semibold mb-4">Users in this room</h2>
                         {isEmpty(roomUsers) ? (
                             <p>No users found.</p>
@@ -194,7 +190,7 @@ export default function PersonalRoom() {
                         )}
                     </div>
                 </CardContent>
-                <div className="p-4">
+                <div className="p-4 flex gap-2">
                     <Button variant={'default'} onClick={createExpenseHandler}>
                         Create Expense
                     </Button>
@@ -251,6 +247,11 @@ export default function PersonalRoom() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <Button variant={'default'} onClick={() => {
+                        navigate(`/room/${roomId}/expenses`);
+                    }}>
+                        Show Expenses
+                    </Button>
                 </div>
                 <div className="p-4">
                     <Button variant={'default'} onClick={() => setIsAddUsersDialogOpen(true)}>

@@ -50,9 +50,12 @@ export default function SignIn() {
             if (error.response.status === 404) {
                 toast.success('Account not found! Please sign up ❌');
             }
-            if (error.response.status === 401) {
+            else if (error.response.status === 401) {
                 toast.success('Invalid credentials! Please try again ❌');
-            } else {
+            } else if (error.response.status === 400) {
+                toast.error(`${error.response?.data?.message}`);
+            }
+            else {
                 toast.error('Something went wrong ❌');
             }
         }
