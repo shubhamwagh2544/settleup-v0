@@ -1,5 +1,8 @@
 import './landingPage.scss';
 import avatar from '../assets/avatar.png';
+import avatar2 from '../assets/avatar2.png';
+import avatar3 from '../assets/avatar3.png';
+import avatar4 from '../assets/avatar4.png';
 import split from '../assets/split.png';
 
 const LandingPage = () => {
@@ -42,6 +45,9 @@ const LandingPage = () => {
                     <button>open a ShareSplits Account</button>
                     <div className="avatars">
                         <img className="avatar-img" src={avatar} alt="avatar" />
+                        <img className="avatar-img" src={avatar2} alt="avatar" />
+                        <img className="avatar-img" src={avatar3} alt="avatar" />
+                        <img className="avatar-img" src={avatar4} alt="avatar" />
                     </div>
                     <h4>
                         The best application to manage <br /> your Expenses in group

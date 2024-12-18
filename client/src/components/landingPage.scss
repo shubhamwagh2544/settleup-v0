@@ -106,8 +106,16 @@ body {
 }
 
 .avatar-img {
-    width: 100px;
-    height: 100px;
+   
+    width: 60px;
+    height: 60px;
     object-fit: cover;
     border-radius: 50%;
+    margin-right: -15px;
+    border: 1.5px solid black;
+}
+
+.avatars {
+    margin-top: 10px;
+    display: flex;
 }
