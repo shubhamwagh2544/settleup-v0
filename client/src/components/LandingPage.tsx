@@ -14,7 +14,7 @@ const LandingPage = () => {
         <>
             <div className="container">
                 <div className="navbar">
-                    <h1>ShareSplit1s</h1>
+                    <h1>ShareSplits</h1>
                     <ul>
                         <li>About Us</li>
                         <li>Features</li>
