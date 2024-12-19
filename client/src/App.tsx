@@ -12,8 +12,8 @@ function App() {
         <SocketProvider>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/sharesplits" element={<LandingPage />} />
-                    <Route path="/" element={<SignUp />} />
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/signup" element={<SignUp />} />
                     <Route path="/signin" element={<SignIn />} />
                     <Route path="/main-room" element={<MainRoom />} />
                     <Route path="/room/:roomId" element={<PersonalRoom />} />
