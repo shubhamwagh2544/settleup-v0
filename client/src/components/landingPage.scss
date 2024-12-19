@@ -121,14 +121,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    h2 {
-        margin-top: 10px;
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 32px;
-        font-weight: bold;
-        color: #000000;
-        line-height: 1.1;
-    }
+}
+
+footer {
+    position: sticky;
+    bottom: 0;
+}
+
+footer h2 {
+    margin-top: 10px;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 32px;
+    font-weight: bold;
+    color: #000000;
+    line-height: 1.1;
 }
 
 .app-image {
@@ -171,7 +177,7 @@ body {
     flex-direction: column;
     margin-top: 10px;
     width: 120%;
-    margin-left:-35px;
+    margin-left: -35px;
     h2,
     p {
         color: white;
