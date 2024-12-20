@@ -1,0 +1,309 @@
+body {
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
+    color: #000000;
+    line-height: 1.5;
+}
+
+.container {
+    height: 100vh;
+    max-width: 100% !important;
+    background: linear-gradient(to right, white 75%, #f4c3f7 25%);
+}
+
+.navbar {
+    padding-top: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    ul {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        gap: 3rem;
+        li {
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    }
+
+    button {
+        background-color: #000000;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'Inter', Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+        padding: 12px 24px;
+        border-radius: 1px;
+        border: none;
+        cursor: pointer;
+    }
+    h1 {
+        font-family: 'Lobster', Arial, Helvetica, sans-serif;
+        font-size: 42px;
+        font-weight: 200;
+        color: #000000;
+    }
+}
+
+.main {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 10px;
+    margin-top: 5rem;
+}
+.information {
+    max-width: 50%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+    .subTitle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        img {
+            height: 40px;
+            width: 40px;
+        }
+    }
+
+    h3 {
+        font-size: 20px;
+        letter-spacing: 1.2px;
+        font-weight: 600;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+    }
+    button {
+        background-color: #000000;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'Inter', Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+        padding: 12px 24px;
+        border-radius: 1px;
+        border: none;
+        cursor: pointer;
+    }
+    h2 {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 48px;
+        font-weight: bold;
+        color: #000000;
+        line-height: 1.1;
+    }
+}
+
+.avatar-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: -15px;
+    border: 1.5px solid black;
+}
+
+.avatars {
+    margin-top: 10px;
+    display: flex;
+}
+.footer {
+    width: 100%;
+    height: 4.8rem;
+    background-color: #fce882;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+footer {
+    position: sticky;
+    bottom: 0;
+}
+
+footer h2 {
+    margin-top: 10px;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 32px;
+    font-weight: bold;
+    color: #000000;
+    line-height: 1.1;
+}
+
+.app-image {
+    height: 65vh;
+    border: 3px solid black;
+    max-width: 50%;
+    width: 25%;
+    margin-bottom: 15px;
+    margin-right: 20px;
+    background-color: white;
+}
+.image-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+.card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    gap: 25px;
+    h3 {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 20px;
+        font-weight: bold;
+        color: #000000;
+    }
+    p {
+        font-size: 12px;
+    }
+    img {
+        border: none !important;
+    }
+}
+
+.content-split {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    width: 120%;
+    margin-left: -35px;
+    h2,
+    p {
+        color: white;
+    }
+    background-color: #000000;
+}
+
+.trip {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 10px;
+    margin-left: 20px;
+    gap: 20px;
+    img {
+        height: 45px;
+        width: 45px;
+    }
+    p {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 18px;
+    }
+}
+.expense {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin: 10px 20px 10px 20px;
+    p {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 22px;
+    }
+}
+
+.view-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin: 10px 20px 10px 20px;
+    p {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 18px;
+    }
+    button {
+        background-color: #499d74;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'Inter', Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+        padding: 12px 24px;
+        border-radius: 1px;
+        border: none;
+        cursor: pointer;
+    }
+    img {
+        height: 30px;
+        width: 30px;
+        margin-right: -10px !important;
+    }
+}
+.expense-title {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+.history {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 10px 10px 10px 10px;
+    border: 1px solid grey;
+    height: 7rem !important;
+}
+
+.history-trips {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 10px 10px 10px;
+    gap: 2rem;
+
+    img {
+        height: 50px;
+        width: 50px;
+    }
+    h2 {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 20px;
+        color: #499d74;
+        font-weight: 700;
+    }
+}
+
+.trips-flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem !important;
+    margin-right: 10px;
+    h3 {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    p {
+        font-size: 12px;
+        font-family: 'Times New Roman', Times, serif;
+        color: grey;
+    }
+}
+.booking-flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.beach {
+    border: none !important;
+    border-radius: 50%;
+}

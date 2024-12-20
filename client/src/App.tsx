@@ -5,13 +5,15 @@ import MainRoom from '@/components/MainRoom.tsx';
 import { SocketProvider } from '@/SocketProvider.tsx';
 import PersonalRoom from '@/components/PersonalRoom.tsx';
 import RoomExpenses from '@/components/RoomExpenses.tsx';
+import LandingPage from './components/LandingPage.tsx';
 
 function App() {
     return (
         <SocketProvider>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={<SignUp />} />
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/signup" element={<SignUp />} />
                     <Route path="/signin" element={<SignIn />} />
                     <Route path="/main-room" element={<MainRoom />} />
                     <Route path="/room/:roomId" element={<PersonalRoom />} />
