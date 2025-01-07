@@ -101,7 +101,7 @@ body {
     }
 }
 
-.avatar-img {
+.avatarImg {
     width: 60px;
     height: 60px;
     object-fit: cover;
@@ -137,7 +137,7 @@ footer h2 {
     line-height: 1.1;
 }
 
-.app-image {
+.appImage {
     height: 65vh;
     border: 3px solid black;
     max-width: 50%;
@@ -146,7 +146,7 @@ footer h2 {
     margin-right: 20px;
     background-color: white;
 }
-.image-main {
+.imageImain {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -172,7 +172,7 @@ footer h2 {
     }
 }
 
-.content-split {
+.contentSplit {
     display: flex;
     flex-direction: column;
     margin-top: 10px;
@@ -212,7 +212,7 @@ footer h2 {
     }
 }
 
-.view-split {
+.viewSplit {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -231,7 +231,7 @@ footer h2 {
         padding: 12px 24px;
         border-radius: 1px;
         border: none;
-        cursor: pointer;
+        cursor: default;
     }
     img {
         height: 30px;
@@ -239,7 +239,7 @@ footer h2 {
         margin-right: -10px !important;
     }
 }
-.expense-title {
+.expenseTitle {
     margin-top: 10px;
     display: flex;
     justify-content: center;
@@ -260,7 +260,7 @@ footer h2 {
     height: 7rem !important;
 }
 
-.history-trips {
+.historyTrips {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -279,7 +279,7 @@ footer h2 {
     }
 }
 
-.trips-flex {
+.tripsFlex {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -296,7 +296,7 @@ footer h2 {
         color: grey;
     }
 }
-.booking-flex {
+.bookingFlex {
     display: flex;
     justify-content: center;
     align-items: center;
