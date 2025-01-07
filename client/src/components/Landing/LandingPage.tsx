@@ -1,19 +1,19 @@
-import './landingPage.scss';
-import avatar from '../assets/avatar.png';
-import avatar2 from '../assets/avatar2.png';
-import avatar3 from '../assets/avatar3.png';
-import avatar4 from '../assets/avatar4.png';
-import split from '../assets/split.png';
-import beach from '../assets/beach.png';
+import styles from './landingPage.module.scss';
+import avatar from '../../assets/avatar.png';
+import avatar2 from '../../assets/avatar2.png';
+import avatar3 from '../../assets/avatar3.png';
+import avatar4 from '../../assets/avatar4.png';
+import split from '../../assets/split.png';
+import beach from '../../assets/beach.png';
 
-import paris from '../assets/paris.png';
+import paris from '../../assets/paris.png';
 import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
     return (
         <>
-            <div className="container">
-                <div className="navbar">
+            <div className={styles.container}>
+                <div className={styles.navbar}>
                     <h1>ShareSplits</h1>
                     <ul>
                         <li>About Us</li>
@@ -26,9 +26,9 @@ const LandingPage = () => {
                         <button>Sign In </button>
                     </Link>
                 </div>
-                <div className="main">
-                    <div className="information">
-                        <div className="subTitle">
+                <div className={styles.main}>
+                    <div className={styles.information}>
+                        <div className={styles.subTitle}>
                             <img src={split} alt="split" />
                             <h3> Instant Split</h3>
                         </div>
@@ -55,32 +55,32 @@ const LandingPage = () => {
                             <button>open a ShareSplits Account </button>
                         </Link>
 
-                        <div className="avatars">
-                            <img className="avatar-img" src={avatar} alt="avatar" />
-                            <img className="avatar-img" src={avatar2} alt="avatar" />
-                            <img className="avatar-img" src={avatar3} alt="avatar" />
-                            <img className="avatar-img" src={avatar4} alt="avatar" />
+                        <div className={styles.avatars}>
+                            <img className={styles.avatarImg} src={avatar} alt="avatar" />
+                            <img className={styles.avatarImg} src={avatar2} alt="avatar" />
+                            <img className={styles.avatarImg} src={avatar3} alt="avatar" />
+                            <img className={styles.avatarImg} src={avatar4} alt="avatar" />
                         </div>
                         <h4>
                             The best application to manage <br /> your Expenses in group
                         </h4>
                     </div>
-                    <div className="app-image">
-                        <div className="image-main">
-                            <div className="card">
-                                <img className="avatar-img" src={avatar} alt="avatar" />
-                                <div className="image-title">
+                    <div className={styles.appImage}>
+                        <div className={styles.imageMain}>
+                            <div className={styles.card}>
+                                <img className={styles.avatarImg} src={avatar} alt="avatar" />
+                                <div className={styles.imageTitle}>
                                     <h3>Hi Jane</h3>
                                     <p>Make your groups and split bills easily</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="content-split">
-                            <div className="trip">
-                                <img className="avatar-img" src={paris} alt="avatar" />
+                        <div className={styles.contentSplit}>
+                            <div className={styles.trip}>
+                                <img className={styles.avatarImg} src={paris} alt="avatar" />
                                 <p>Trip to Paris</p>
                             </div>
-                            <div className="expense">
+                            <div className={styles.expense}>
                                 <p>
                                     Total <br /> $3800
                                 </p>
@@ -91,28 +91,28 @@ const LandingPage = () => {
 
                             <hr />
 
-                            <div className="view-split">
+                            <div className={styles.viewSplit}>
                                 <div>
                                     <p>Split To</p>
-                                    <div className="avatars">
-                                        <img className="avatar-img" src={avatar} alt="avatar" />
-                                        <img className="avatar-img" src={avatar2} alt="avatar" />
-                                        <img className="avatar-img" src={avatar3} alt="avatar" />
-                                        <img className="avatar-img" src={avatar4} alt="avatar" />
+                                    <div className={styles.avatars}>
+                                        <img className={styles.avatarImg} src={avatar} alt="avatar" />
+                                        <img className={styles.avatarImg} src={avatar2} alt="avatar" />
+                                        <img className={styles.avatarImg} src={avatar3} alt="avatar" />
+                                        <img className={styles.avatarImg} src={avatar4} alt="avatar" />
                                     </div>
                                 </div>
                                 <button>View Split</button>
                             </div>
                         </div>
-                        <div className="expense-title">
+                        <div className={styles.expenseTitle}>
                             {' '}
                             <h3>Expense History</h3>{' '}
                         </div>
 
-                        <div className="history">
-                            <div className="history-trips">
-                                <div className="trips-flex">
-                                    <img className="beach" src={beach} alt="avatar" />
+                        <div className={styles.history}>
+                            <div className={styles.historyTrips}>
+                                <div className={styles.tripsFlex}>
+                                    <img className={styles.beach} src={beach} alt="avatar" />
                                     <div>
                                         <h3>Resort Booking</h3>
                                         <p>Trip to Paris - Paid by Rini</p>
@@ -127,7 +127,7 @@ const LandingPage = () => {
                 </div>
             </div>
             <footer>
-                <div className="footer">
+                <div className={styles.footer}>
                     <h2>Your Partner in Group Finance Management</h2>
                 </div>
             </footer>

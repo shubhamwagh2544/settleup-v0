@@ -1,11 +1,11 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import SignIn from './components/SignIn.tsx';
+import SignIn from './components/SignIn/SignIn.tsx';
 import SignUp from './components/SignUp.tsx';
 import MainRoom from '@/components/MainRoom.tsx';
 import { SocketProvider } from '@/SocketProvider.tsx';
 import PersonalRoom from '@/components/PersonalRoom.tsx';
 import RoomExpenses from '@/components/RoomExpenses.tsx';
-import LandingPage from './components/LandingPage.tsx';
+import LandingPage from './components/Landing/LandingPage.tsx';
 
 function App() {
     return (
