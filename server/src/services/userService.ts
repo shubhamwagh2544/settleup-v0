@@ -49,6 +49,11 @@ class UserService {
         });
     }
 
+    async getUserInfo(id: number) {
+        // User => Rooms => Accounts => Expenses
+
+    }
+
     async updateUser(id: number) {
         await this.getUserByIdOrEmail(id, null);
     }

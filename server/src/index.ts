@@ -9,11 +9,13 @@ import RoomRoutes from './routes/roomRoutes';
 import DbConfig from './config/dbConfig';
 import AuthRoutes from './routes/authRoutes';
 import ExpenseRoutes from './routes/expenseRoutes';
+import AccountRoutes from './routes/accountRoutes';
 
 export const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
 
+const accountRoutes = AccountRoutes.getInstance();
 const authRoutes = AuthRoutes.getInstance();
 const userRoutes = UserRoutes.getInstance();
 const roomRoutes = RoomRoutes.getInstance();
@@ -46,6 +48,7 @@ DbConfig.createAdminUser().then((user) => {
 app.use(express.json());
 app.use(cors(corsOptions));
 
+app.use('/api/account', accountRoutes.getRouter());
 app.use('/api/auth', authRoutes.getRouter());
 app.use('/api/user', userRoutes.getRouter());
 app.use('/api/room', roomRoutes.getRouter());

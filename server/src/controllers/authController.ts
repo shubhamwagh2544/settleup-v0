@@ -35,7 +35,6 @@ class AuthController {
             const [ user, token ] = await authService.signUp(firstname, lastname, email, password);
             return res.status(201).json({user, token});
         } catch (error) {
-            // await DbConfig.disconnectDatabase();
             return errorHandler(error, req, res);
         }
     }
@@ -46,7 +45,6 @@ class AuthController {
             const [ user, token ] = await authService.signIn(email, password);
             return res.status(200).json({ user, token });
         } catch (error) {
-            // await DbConfig.disconnectDatabase();
             return errorHandler(error, req, res);
         }
     }

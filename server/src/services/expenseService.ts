@@ -169,6 +169,19 @@ class ExpenseService {
         if (isNil(expense)) {
             throw new CustomError('Expense not Found' ,404);
         }
+        // check if expense is settled
+        const userExpenseEntries = await prisma.userExpense.findMany({
+            where: {
+                id: expenseId,
+            }
+        });
+        const isSettled = userExpenseEntries.every((entry) => {
+            return entry.isSettled === true;
+        });
+        if (!isSettled) {
+            throw new CustomError('Expense not Settled', 409);
+        }
+
         await prisma.expense.delete({
             where: {
                 id: expense.id
