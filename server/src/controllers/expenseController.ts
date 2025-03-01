@@ -38,6 +38,16 @@ class ExpenseController {
         }
     }
 
+    async deleteExpense(req: Request, res: Response) {
+        try {
+            const {expenseId} = req.params;
+            const success = await expenseService.deleteExpense(parseInt(expenseId));
+            return res.status(200).json(success);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
 }
 
 export default ExpenseController;

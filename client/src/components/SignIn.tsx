@@ -40,6 +40,7 @@ export default function SignIn() {
                 toast.success(`Welcome! ${get(user, 'firstName', "")} ${get(user, 'lastName', "")} 👋`);
 
                 localStorage.setItem('token', token);
+                localStorage.setItem('userId', user.id);
                 navigate(`/main-room`, { state: { userId: user.id } });
             }
             else {

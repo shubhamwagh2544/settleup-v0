@@ -129,7 +129,52 @@ class ExpenseService {
             throw new CustomError('Room with expense and users not found', 404);
         }
 
+        // add fullName to users
+        for (const expense of room?.expenses) {
+            const users = expense.users;
+            const userIds = expense.users.map(user => user.userId);
+            // @ts-ignore
+            expense.users = (await prisma.user.findMany({
+                where: {
+                    id: {
+                        in: userIds
+                    },
+                },
+            })).map(user => ({
+                ...user,
+                fullName: `${user.firstName} ${user.lastName}`
+            }))
+            // @ts-ignore
+            expense.users = expense.users.map(expenseUser => {
+                let obj = {}
+                users.forEach(user => {
+                    if (user.userId === expenseUser.id) {
+                        obj = {...user, ...expenseUser};
+                    }
+                })
+                return obj;
+            });
+        }
+
         return room.expenses || [];
+    }
+
+    async deleteExpense(expenseId: number) {
+        // check if expense exists
+        const expense = await prisma.expense.findUnique({
+            where: {
+                id: expenseId
+            }
+        });
+        if (isNil(expense)) {
+            throw new CustomError('Expense not Found' ,404);
+        }
+        await prisma.expense.delete({
+            where: {
+                id: expense.id
+            }
+        })
+        return 'Delete Successful';
     }
 }
 

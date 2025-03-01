@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button.tsx';
+import { get } from 'lodash';
+import { toast } from 'sonner';
 import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
-import { get } from 'lodash';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 export default function RoomExpenses() {
     const { roomId } = useParams();
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const loggedInUserId = localStorage.getItem('userId');
 
     useEffect(() => {
         const fetchExpenses = async () => {
@@ -18,10 +22,9 @@ export default function RoomExpenses() {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     }
                 });
-                console.log(response)
                 setExpenses(response.data);
             } catch (err) {
-                console.log(error)
+                console.error(err);
                 setError('Error fetching expenses');
             } finally {
                 setLoading(false);
@@ -30,6 +33,28 @@ export default function RoomExpenses() {
 
         fetchExpenses();
     }, [roomId]);
+
+    async function deleteExpense(expenseId: number) {
+        try {
+            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
+            if (response?.data.includes('Delete Successful') && response?.status === 200) {
+                console.log(`${response.data} for expense Id: `, expenseId);
+                toast.success('Expense Deleted');
+                setExpenses(expenses.filter((exp: any) => exp.id !== expenseId));
+            }
+        } catch (error) {
+            console.error('Error deleting expense with expense ID', expenseId);
+            toast.error('Error deleting expense');
+        }
+    }
+
+    async function handlePayExpense() {
+        console.log('payment initiated');
+    }
 
     if (loading) {
         return <div className="p-4">Loading expenses...</div>;
@@ -46,23 +71,52 @@ export default function RoomExpenses() {
                 <p>No expenses found.</p>
             ) : (
                 <ul className="list-disc list-inside">
-                    {expenses.map((expense: any) => (
-                        <li key={get(expense, 'id', 'N/A')} className="mb-2">
-                            <div className="font-semibold">{get(expense, 'name', 'N/A')}</div>
-                            <div>{get(expense, 'description', 'N/A')}</div>
-                            <div className="text-gray-500">Amount: ${get(expense, 'amount', 'N/A')}</div>
-                            <div className="text-gray-500">Lender: {expense.users.find((user: any) => user.isLender).userId}</div>
-                            <div className="text-gray-500">Borrowers:</div>
-                            <ul className="list-disc list-inside ml-4">
-                                {expense.users.filter((user: any) => !user.isLender).map((borrower: any) => (
-                                    <li key={borrower.userId}>
-                                        User {borrower.userId} owes ${borrower.amountOwed}
-                                        <a href={`/pay/${borrower.userId}/${expense.id}`} className="text-blue-500 ml-2">Pay</a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </li>
-                    ))}
+                    {expenses.map((expense: any) => {
+                        const lender = expense.users.find((user: any) => user.isLender);
+                        const borrowers = expense.users.filter((user: any) => !user.isLender);
+                        const isLender = lender?.id === Number(loggedInUserId);
+
+                        return (
+                            <li key={expense.id} className="mb-4 p-4 border rounded-lg shadow-sm bg-gray-100">
+                                <div className="font-semibold">{get(expense, 'name', 'N/A')}</div>
+                                <div>{get(expense, 'description', 'N/A')}</div>
+                                <div className="text-gray-500">Amount: ${get(expense, 'amount', 'N/A')}</div>
+                                <div className="text-gray-500">Lender: {lender?.fullName}</div>
+                                <div className="text-gray-500">Borrowers:</div>
+                                <ul className="list-disc list-inside ml-4">
+                                    {borrowers.map((borrower: any) => {
+                                        const isBorrower = borrower.userId === Number(loggedInUserId);
+                                        return (
+                                            <li key={borrower.userId} className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border">
+                                                <span className="text-gray-700 font-medium">
+                                                    {borrower.fullName} owes <span className="text-red-500 font-bold">${borrower.amountOwed}</span>
+                                                </span>
+                                                {isBorrower && (
+                                                    <Button
+                                                        variant="outline"
+                                                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition duration-200"
+                                                        onClick={handlePayExpense}
+                                                    >
+                                                        Pay Expense
+                                                    </Button>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+
+                                {isLender && (
+                                    <Button
+                                        variant="destructive"
+                                        className="mt-2"
+                                        onClick={() => deleteExpense(expense.id)}
+                                    >
+                                        Delete Expense
+                                    </Button>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
         </div>

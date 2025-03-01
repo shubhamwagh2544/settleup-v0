@@ -1,12 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import { isNil } from 'lodash';
+import { userModel } from '../model-extensions/userModel';
 
 class DbConfig {
-    private static prisma: PrismaClient;
+    private static prisma: ReturnType<typeof DbConfig.createPrismaInstance>;
+
+    private static createPrismaInstance() {
+        return new PrismaClient().$extends(userModel);
+    }
 
     public static getInstance() {
         if (isNil(DbConfig.prisma)) {
-            DbConfig.prisma = new PrismaClient();
+            DbConfig.prisma = DbConfig.createPrismaInstance();
         }
         return DbConfig.prisma;
     }
