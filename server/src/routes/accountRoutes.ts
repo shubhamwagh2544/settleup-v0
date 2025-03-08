@@ -22,7 +22,9 @@ class AccountRoutes {
     }
 
     private initializeRoutes(): void {
-        this.accountRouter.post('/', accountController.createAccount);
+        this.accountRouter.post('/user', authMiddleware, accountController.createAccount);
+        this.accountRouter.get('/user/:userId', authMiddleware, accountController.getAccountsForUser);
+        this.accountRouter.get('/:accountId/user/:userId', authMiddleware, accountController.getAccountByAccountId)
     }
 
     public getRouter(): Router {

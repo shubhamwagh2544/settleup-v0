@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -189,8 +189,8 @@ export default function PersonalRoom() {
     }
 
     return (
-        <div className="p-4">
-            <Card className="w-full h-full">
+        <div className="flex p-2 m-2">
+            <Card className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6">
                 <CardHeader>
                     <CardTitle>{get(room, 'name', 'Room')}</CardTitle>
                 </CardHeader>
@@ -329,6 +329,9 @@ export default function PersonalRoom() {
                     </Dialog>
                     <Button className={"ml-2"} variant={"destructive"} onClick={handleDeleteRoom}>Delete Room</Button>
                 </div>
+                <CardFooter className="flex justify-end">
+                    <Button variant="secondary" onClick={() => window.history.back()}>Go Back</Button>
+                </CardFooter>
             </Card>
         </div>
     );

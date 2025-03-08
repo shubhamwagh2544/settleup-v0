@@ -33,7 +33,28 @@ class AccountController {
                 return res.status(422).json(userIdValidator.error.format());
             }
             const { id: userId } = userIdValidator.data;
-            const account = await accountService.createAccount(userId);
+            const {name: accountName, type: accountType} = req.body;
+            const account = await accountService.createAccount(accountName, accountType, userId);
+            return res.status(200).json(account);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getAccountsForUser(req: Request, res: Response) {
+        try {
+            const {userId} = req.params;
+            const accounts = await accountService.getAccountsForUser(parseInt(userId));
+            return res.status(200).json(accounts);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getAccountByAccountId(req: Request, res: Response) {
+        try {
+            const {userId, accountId} = req.params;
+            const account = await accountService.getAccountByAccountId(parseInt(userId), parseInt(accountId));
             return res.status(200).json(account);
         } catch (error) {
             return errorHandler(error, req, res);

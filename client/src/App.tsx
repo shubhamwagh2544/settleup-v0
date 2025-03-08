@@ -6,6 +6,7 @@ import { SocketProvider } from '@/SocketProvider.tsx';
 import PersonalRoom from '@/components/PersonalRoom.tsx';
 import RoomExpenses from '@/components/RoomExpenses.tsx';
 import LandingPage from './components/LandingPage.tsx';
+import PersonalAccount from '@/components/PersonalAccount.tsx';
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                     <Route path="/main-room" element={<MainRoom />} />
                     <Route path="/room/:roomId" element={<PersonalRoom />} />
                     <Route path="/room/:roomId/expenses" element={<RoomExpenses />} />
+                    <Route path="/account/:accountId" element={<PersonalAccount />} />
                 </Routes>
             </BrowserRouter>
         </SocketProvider>

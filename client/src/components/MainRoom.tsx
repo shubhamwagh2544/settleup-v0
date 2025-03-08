@@ -1,39 +1,33 @@
-import { Button } from "./ui/button";
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import {Account, AccountType} from '@/types/Account.ts';
 import axios from 'axios';
+import { Button } from "./ui/button";
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+    Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from 'sonner';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
+} from "@/components/ui/dialog"
 
 export default function MainRoom() {
     const [room, setRoom] = useState("");
     const [rooms, setRooms] = useState([]);
-    // const [users, setUsers] = useState([]);
-    const [userAccounts, setUserAccounts] = useState([]);
+    const [userAccounts, setUserAccounts] = useState<Account[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [accountName, setAccountName] = useState("");
+    const [accountType, setAccountType] = useState<AccountType>("saving");
+
     const navigate = useNavigate();
     const location = useLocation();
-    const userId = get(location, 'state.userId', null);
+    const userId = get(location, 'state.userId') || localStorage.getItem('userId') || null;
 
     useEffect(() => {
-        // async function fetchUsers() {
-        //     const response = await axios.get(`${BACKEND_URL}/user`, {
-        //         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
-        //     });
-        //     setUsers(response.data);
-        // }
-        // fetchUsers().catch(error => console.error('Error fetching users', error));
-
         async function fetchRooms() {
             const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
@@ -43,7 +37,7 @@ export default function MainRoom() {
         fetchRooms().catch(error => console.error("Error fetching rooms", error));
 
         async function fetchUserAccounts() {
-            const response = await axios.get(`${BACKEND_URL}/user/accounts`, {
+            const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
             });
             setUserAccounts(response.data);
@@ -70,6 +64,44 @@ export default function MainRoom() {
                 setRoom("");
             }
             console.error('Error creating room', error);
+        }
+    }
+
+    async function handleAddAccount() {
+        setIsDialogOpen(true);
+    }
+
+    async function handleSaveAccount() {
+        console.log({
+            accountType,
+            accountName
+        });
+        if (isEmpty(accountName.trim()) || isEmpty(accountType.trim())) {
+            toast.error('Account name and type are required');
+            return;
+        }
+
+        try {
+            const response = await axios.post<Account>(`${BACKEND_URL}/account/user`, {
+                name: accountName,
+                type: accountType,
+                userId: userId
+            }, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.status === 201 && response.data) {
+                toast.success('Account created successfully');
+                setUserAccounts([...userAccounts, response.data]);
+                setIsDialogOpen(false);
+                setAccountName('');
+                setAccountType('saving');
+            }
+        } catch (error) {
+            toast.error('Error creating account');
+            console.error('Error:', error);
         }
     }
 
@@ -119,16 +151,58 @@ export default function MainRoom() {
                         <ul className="list-disc list-inside">
                             {userAccounts.map((account) => (
                                 <li key={get(account, 'id', 'N/A')} className="mb-2">
-                                    {get(account, 'ownerName', 'N/A')} - Balance: {get(account, 'balance', 0)}
+                                    <Link to={`/account/${get(account, 'id', 'N/A')}`}>
+                                        {get(account, 'accountName', 'N/A')}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
                     )}
                 </CardContent>
                 <CardFooter>
-                    <Button className="mt-4">Add Account</Button>
+                    <Button className="mt-4" onClick={handleAddAccount}>Add Account</Button>
                 </CardFooter>
             </Card>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add Account</DialogTitle>
+                        <DialogDescription>Fill in the details of the account</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="accountName">Account Name</Label>
+                            <Input
+                                id="accountName"
+                                value={accountName}
+                                onChange={(e) => setAccountName(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="accountType">Account Type</Label>
+                            <select
+                                id="accountType"
+                                value={accountType}
+                                onChange={(e) => setAccountType(e.target.value as AccountType)}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Select Account Type</option>
+                                <option value="saving">Saving</option>
+                                <option value="current">Current</option>
+                            </select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="default" onClick={handleSaveAccount}>
+                            Save
+                        </Button>
+                        <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

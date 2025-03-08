@@ -93,6 +93,7 @@ model UserExpense {
 
 model Account {
   id                   Int       @id @default(autoincrement()) @map("id") @db.Integer
+  accountName          String    @map("account_name") @db.VarChar(50)
   accountType          String    @map("account_type") @db.VarChar(50)
   status               String    @default("active") @map("status") @db.VarChar(50)
   balance              Decimal   @default(0) @map("balance") @db.Decimal(10, 2)
