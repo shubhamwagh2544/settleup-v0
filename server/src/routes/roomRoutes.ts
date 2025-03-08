@@ -28,6 +28,7 @@ class RoomRoutes {
         this.roomRouter.get('/:roomId/users', authMiddleware, roomController.getUsersByRoomId);
         this.roomRouter.post('/:roomId/users', authMiddleware, roomController.addUsersToRoom);
         this.roomRouter.get('/:roomId', authMiddleware, roomController.getRoomById);
+        this.roomRouter.delete('/:roomId', authMiddleware, roomController.deleteRoom);
     }
 
     public getRouter() {

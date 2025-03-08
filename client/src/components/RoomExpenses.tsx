@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button.tsx';
 import { get } from 'lodash';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -46,9 +46,14 @@ export default function RoomExpenses() {
                 toast.success('Expense Deleted');
                 setExpenses(expenses.filter((exp: any) => exp.id !== expenseId));
             }
-        } catch (error) {
-            console.error('Error deleting expense with expense ID', expenseId);
-            toast.error('Error deleting expense');
+        } catch (error: AxiosError | any) {
+            console.log(error);
+            if (error.status === 409 || error.status === 404) {
+                toast.error(`${error.response.data.message}`)
+            } else {
+                console.error('Error deleting expense with expense ID', expenseId);
+                toast.error('Error deleting expense');
+            }
         }
     }
 

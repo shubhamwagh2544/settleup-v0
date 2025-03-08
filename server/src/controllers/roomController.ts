@@ -21,7 +21,7 @@ class RoomController {
     async createRoom(req: Request, res: Response) {
         try {
             const { userId, name } = req.body;
-            const room = await roomService.createRoom(userId, name);
+            const room = await roomService.createRoom(parseInt(userId), name);
             return res.status(201).json(room);
         } catch (error) {
             // await DbConfig.disconnectDatabase();
@@ -74,6 +74,16 @@ class RoomController {
             const { userIds } = req.body;
             await roomService.addUsersToRoom(parseInt(roomId), userIds);
             return res.status(200).json({ message: 'Users added to room' });
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async deleteRoom(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params;
+            const success = await roomService.deleteRoom(parseInt(roomId));
+            return res.status(200).json(success);
         } catch (error) {
             return errorHandler(error, req, res);
         }

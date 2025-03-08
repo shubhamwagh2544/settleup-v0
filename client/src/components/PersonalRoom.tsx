@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -163,6 +163,27 @@ export default function PersonalRoom() {
         }
     }
 
+    async function handleDeleteRoom() {
+        try {
+            const response = await axios.delete(`${BACKEND_URL}/room/${roomId}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            })
+            console.log(response);
+            if (response.status === 200 && response.data.includes('Delete Successful')) {
+                navigate('/main-room', {state: {userId: localStorage.getItem('userId')}})
+            }
+        } catch (error: AxiosError | any) {
+            console.log(error);
+            if (error.status === 409 || error.status === 404) {
+                toast.error(`${error.response.data.message}`)
+            } else {
+                toast.error('Error deleting room!');
+            }
+        }
+    }
+
     if (isEmpty(room) || isNil(room)) {
         return <div>Room Loading...</div>;
     }
@@ -306,6 +327,7 @@ export default function PersonalRoom() {
                             )}
                         </DialogContent>
                     </Dialog>
+                    <Button className={"ml-2"} variant={"destructive"} onClick={handleDeleteRoom}>Delete Room</Button>
                 </div>
             </Card>
         </div>

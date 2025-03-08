@@ -203,6 +203,40 @@ class RoomService {
             })),
         });
     }
+
+    async deleteRoom(roomId: number) {
+        // if room exists
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId,
+                isActive: true,
+                isDefault: false
+            },
+            select: {
+                users: true,
+                expenses: true
+            }
+        });
+        if (isNil(room)) {
+            throw new CustomError('Room not found', 404);
+        }
+        const roomExpenses = room?.expenses;
+        const isSettled = roomExpenses.every(expense => {
+            return expense.isSettled === true
+        })
+        if (!isSettled) {
+            throw new CustomError('Room Expenses are not settled', 409);
+        }
+
+        // delete all expenses and then associated room
+        await prisma.$transaction([
+            prisma.expense.deleteMany({ where: { roomId } }),
+            prisma.userRoom.deleteMany({ where: { roomId }}),
+            prisma.room.delete({ where: { id: roomId } })
+        ])
+
+        return 'Delete Successful';
+    }
 }
 
 export default RoomService;

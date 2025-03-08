@@ -65,12 +65,13 @@ model Expense {
   name        String   @map("name") @db.VarChar(255)
   description String?  @map("description") @db.Text
   amount      Decimal  @map("amount")
+  isSettled   Boolean  @default(false) @map("is_settled")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
 
   // Relationships
   roomId Int  @db.Integer
-  room   Room @relation(fields: [roomId], references: [id])
+  room   Room @relation(fields: [roomId], references: [id]) // onDelete: Cascade
 
   users        UserExpense[]
   transactions Transaction[]

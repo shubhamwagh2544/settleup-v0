@@ -172,7 +172,7 @@ class ExpenseService {
         // check if expense is settled
         const userExpenseEntries = await prisma.userExpense.findMany({
             where: {
-                id: expenseId,
+                expenseId
             }
         });
         const isSettled = userExpenseEntries.every((entry) => {

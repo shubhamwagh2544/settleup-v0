@@ -17,137 +17,118 @@ import { Label } from "@/components/ui/label"
 import { toast } from 'sonner';
 
 export default function MainRoom() {
-
     const [room, setRoom] = useState("");
     const [rooms, setRooms] = useState([]);
-    const [users, setUsers] = useState([]);
+    // const [users, setUsers] = useState([]);
+    const [userAccounts, setUserAccounts] = useState([]);
     const navigate = useNavigate();
     const location = useLocation();
-    // const { user, loading } = useLoggedInUser();
     const userId = get(location, 'state.userId', null);
 
     useEffect(() => {
-        // Fetch all users
-        async function fetchUsers() {
-            const response = await axios.get(`${BACKEND_URL}/user`, {
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
-                }
-            });
-            setUsers(response.data);
-        }
-        fetchUsers()
-            .then(() => console.log('users fetched successfully'))
-            .catch((error) => console.error('error fetching users', error));
+        // async function fetchUsers() {
+        //     const response = await axios.get(`${BACKEND_URL}/user`, {
+        //         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+        //     });
+        //     setUsers(response.data);
+        // }
+        // fetchUsers().catch(error => console.error('Error fetching users', error));
 
-        // Fetch all rooms
         async function fetchRooms() {
             const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
-                }
+                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
             });
             setRooms(response.data);
         }
-        fetchRooms()
-            .then(() => console.log("Rooms fetched successfully"))
-            .catch((error) => console.error("Error fetching rooms", error));
+        fetchRooms().catch(error => console.error("Error fetching rooms", error));
+
+        async function fetchUserAccounts() {
+            const response = await axios.get(`${BACKEND_URL}/user/accounts`, {
+                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+            });
+            setUserAccounts(response.data);
+        }
+        fetchUserAccounts().catch(error => console.error("Error fetching user accounts", error));
     }, []);
 
     async function createRoomHandler() {
         if (isEmpty(room.trim()) || isNil(room)) {
             toast.error('Room name is required');
             setRoom("");
+            return;
         }
         try {
-            const response = await axios.post(`${BACKEND_URL}/room`, {name: room, userId}, {
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('token')}`,
-                }
-            } );
-            const data = response.data;
+            const response = await axios.post(`${BACKEND_URL}/room`, { name: room, userId }, {
+                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+            });
             if (response.status === 201) {
-                navigate(`/room/${data.id}`);
+                navigate(`/room/${response.data.id}`);
             }
         } catch (error: any) {
             if (error.status === 409) {
                 toast.error('Room already exists');
                 setRoom("");
             }
-            console.error('error creating room', error);
+            console.error('Error creating room', error);
         }
-    }
-
-    if (isEmpty(users)) {
-        return (
-            <div>
-                <h1>No users found. Please create a room to get started</h1>
-            </div>
-        );
     }
 
     return (
         <div className="flex flex-row gap-8 p-4">
-            <div className="w-1/2">
-                <h2 className="text-lg font-semibold mb-4">Your Rooms</h2>
-                {isEmpty(rooms) ? (
-                    <p>No rooms found. Create a new room to get started!</p>
-                ) : (
-                    <ul className="list-disc list-inside">
-                        {rooms.map((data) => (
-                            <li key={get(data, 'room.id', 'N/A')} className="mb-2">
-                                <Link to={`/room/${get(data, 'room.id', 'N/A')}`}>
-                                    {get(data, 'room.name', 'N/A')}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-            <div className="w-1/2">
-                <div className="mb-4">
-                    <Card className="w-full">
-                        <CardHeader>
-                            <CardTitle>Create Room</CardTitle>
-                            <CardDescription>Create your room to add expenses</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form>
-                                <div className="grid w-full items-center gap-4">
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input
-                                            id="name"
-                                            placeholder="Name of your room"
-                                            value={room}
-                                            onChange={(e) => setRoom(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </form>
-                        </CardContent>
-                        <CardFooter className="flex justify-end">
-                            <Button onClick={createRoomHandler}>Create</Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-                <div>
-                    <h2 className="text-lg font-semibold mb-4">All Users</h2>
-                    {isEmpty(users) ? (
-                        <p>No users found.</p>
-                    ) : (
-                        <div className="list-disc list-inside">
-                            {users
-                                .filter((u) => get(u, 'id') !== userId)
-                                .map((user) => (
-                                    <div key={get(user, 'id', 'N/A')} className="mb-2">
-                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
-                                    </div>
-                                ))}
-                        </div>
+            <Card className="w-1/3">
+                <CardHeader>
+                    <CardTitle>Your Rooms</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {isEmpty(rooms) ? <p>No rooms found. Create a new room to get started!</p> : (
+                        <ul className="list-disc list-inside">
+                            {rooms.map((data) => (
+                                <li key={get(data, 'room.id', 'N/A')} className="mb-2">
+                                    <Link to={`/room/${get(data, 'room.id', 'N/A')}`}>{get(data, 'room.name', 'N/A')}</Link>
+                                </li>
+                            ))}
+                        </ul>
                     )}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
+            <Card className="w-1/3">
+                <CardHeader>
+                    <CardTitle>Create Room</CardTitle>
+                    <CardDescription>Create your room to add expenses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form>
+                        <div className="grid w-full items-center gap-4">
+                            <div className="flex flex-col space-y-1.5">
+                                <Label htmlFor="name">Name</Label>
+                                <Input id="name" placeholder="Name of your room" value={room} onChange={(e) => setRoom(e.target.value)} />
+                            </div>
+                        </div>
+                    </form>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                    <Button onClick={createRoomHandler}>Create</Button>
+                </CardFooter>
+            </Card>
+            <Card className="w-1/3">
+                <CardHeader>
+                    <CardTitle>User Accounts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {isEmpty(userAccounts) ? <p>No user accounts found.</p> : (
+                        <ul className="list-disc list-inside">
+                            {userAccounts.map((account) => (
+                                <li key={get(account, 'id', 'N/A')} className="mb-2">
+                                    {get(account, 'ownerName', 'N/A')} - Balance: {get(account, 'balance', 0)}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </CardContent>
+                <CardFooter>
+                    <Button className="mt-4">Add Account</Button>
+                </CardFooter>
+            </Card>
         </div>
     );
 }

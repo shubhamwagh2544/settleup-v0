@@ -6,7 +6,9 @@ class DbConfig {
     private static prisma: ReturnType<typeof DbConfig.createPrismaInstance>;
 
     private static createPrismaInstance() {
-        return new PrismaClient().$extends(userModel);
+        return new PrismaClient({
+            log: ['query']
+        }).$extends(userModel);
     }
 
     public static getInstance() {
