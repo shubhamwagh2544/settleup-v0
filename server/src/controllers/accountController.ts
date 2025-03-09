@@ -61,6 +61,17 @@ class AccountController {
         }
     }
 
+    async addMoneyToAccount(req: Request, res: Response) {
+        try {
+            const {userId, accountId} = req.params;
+            const {amount} = req.body;
+            const account = await accountService.addMoneyToAccount(parseInt(userId), parseInt(accountId), amount);
+            return res.status(200).json(account);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
 }
 
 export default AccountController;

@@ -50,13 +50,91 @@ class AccountService {
         const account = await prisma.account.findUnique({
             where: {
                 id: accountId,
-                userId
+                userId,
+                status: 'active'
             }
         })
         if (isNil(account)) {
             throw new CustomError('Account not Found', 404);
         }
         return account;
+    }
+
+    async addMoneyToAccount(userId: number, accountId: number, amount: number) {
+        if (amount <= 0) {
+            throw new CustomError('Invalid deposit amount', 400);
+        }
+        // prisma transaction
+        return await prisma.$transaction(async (tx) => {
+            // fetch account inside tx to avoid race conditions
+            const account = await tx.account.findUnique({
+                where: {
+                    id: accountId,
+                    userId,
+                    status: 'active'
+                },
+                select: {
+                    balance: true
+                }
+            });
+            if (isNil(account)) {
+                throw new CustomError('Account not Found or Inactive', 404);
+            }
+
+            // update balance in the transaction
+            let updatedAccount;
+            let transactionStatus: 'COMPLETED' | 'FAILED' = 'COMPLETED';
+            try {
+                 updatedAccount = await tx.account.update({
+                    where: {
+                        id: accountId
+                    },
+                    data: {
+                        balance: {
+                            increment: amount
+                        }
+                    },
+                    select: {
+                        balance: true
+                    }
+                });
+            } catch (error) {
+                transactionStatus = 'FAILED';
+
+                await tx.transaction.create({
+                    data: {
+                        amount,
+                        type: 'DEPOSIT',
+                        description: 'Self Deposit',
+                        status: transactionStatus,
+                        senderId: userId,
+                        receiverId: userId,
+                        senderAccountId: accountId,
+                        receiverAccountId: accountId,
+                        createdAt: new Date()
+                    }
+                });
+
+                throw new CustomError('Deposit Failed', 500);
+            }
+
+            // log the transaction
+            await tx.transaction.create({
+                data: {
+                    amount,
+                    type: 'DEPOSIT',
+                    description: 'Self Deposit',
+                    status: transactionStatus,
+                    senderId: userId,
+                    receiverId: userId,
+                    senderAccountId: accountId,
+                    receiverAccountId: accountId,
+                    createdAt: new Date()
+                }
+            });
+
+            return { balance: Number(updatedAccount.balance) };
+        }, { timeout: 30000 })
     }
 }
 
