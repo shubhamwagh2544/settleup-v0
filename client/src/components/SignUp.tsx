@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import BACKEND_URL from '../config.ts';
 import { useSocket } from '@/SocketProvider.tsx';
 import { get } from 'lodash';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignUp() {
     const [state, setState] = useState({
@@ -13,6 +14,7 @@ export default function SignUp() {
         email: '',
         password: '',
     });
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const socket = useSocket();
 
@@ -84,14 +86,23 @@ export default function SignUp() {
                         required
                         onChange={handleInputChange}
                     />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        className="p-3 border border-gray-300 rounded"
-                        required
-                        onChange={handleInputChange}
-                    />
+                    <div className="relative w-full">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            className="p-3 pr-10 border border-gray-300 rounded w-full"
+                            required
+                            onChange={handleInputChange}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
                     <button
                         type="submit"
                         className="bg-purple-700 text-white p-3 rounded hover:bg-purple-800"

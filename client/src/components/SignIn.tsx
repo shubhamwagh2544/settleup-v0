@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from "lucide-react";
 import BACKEND_URL from '../config.ts';
 import { toast } from 'sonner';
 import { useSocket } from '@/SocketProvider.tsx';
@@ -11,6 +12,7 @@ export default function SignIn() {
         email: '',
         password: '',
     });
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const socket = useSocket();
 
@@ -83,14 +85,23 @@ export default function SignIn() {
                         required
                         onChange={handleInputChange}
                     />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        className="p-3 border border-gray-300 rounded"
-                        required
-                        onChange={handleInputChange}
-                    />
+                    <div className="relative w-full">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            className="p-3 pr-10 border border-gray-300 rounded w-full"
+                            required
+                            onChange={handleInputChange}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
                     <button
                         type="submit"
                         className="bg-purple-700 text-white p-3 rounded hover:bg-purple-800"
@@ -102,7 +113,7 @@ export default function SignIn() {
                 <div className="text-center mt-5">
                     <span className="text-sm">
                         Don't Have an Account ?
-                        <Link to="/" className="text-purple-700 hover:underline">
+                        <Link to="/signup" className="text-purple-700 hover:underline">
                             {' '}
                             Sign Up{' '}
                         </Link>
