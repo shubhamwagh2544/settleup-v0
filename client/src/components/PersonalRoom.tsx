@@ -1,26 +1,59 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
-import BACKEND_URL from '@/config.ts';
+import BACKEND_URL from '@/config';
 import { get, isEmpty, isNil } from 'lodash';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Account } from '@/types/Account';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button.tsx';
+import { motion } from 'framer-motion';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+    ArrowLeft,
+    Wallet,
+    PlusCircle,
+    SendHorizontal,
+    ClockIcon,
+    CreditCard,
+    CheckCircle2,
+    XCircle,
+    DollarSign,
+    ArrowUpRight,
+    ArrowDownRight,
+    History,
+    Receipt,
+    Users,
+    UserPlus,
+    Trash2,
+    SplitSquareVertical,
+    UserCircle
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+interface Room {
+    id: string;
+    name: string;
+    expenses: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        amount: number;
+        users: Array<{
+            id: string;
+            fullName: string;
+            isLender: boolean;
+        }>;
+    }>;
+}
 
 export default function PersonalRoom() {
     const { roomId } = useParams();
-    const [room, setRoom] = useState(null);
+    const [room, setRoom] = useState<Room | null>(null);
     const [roomUsers, setRoomUsers] = useState([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isAddUsersDialogOpen, setIsAddUsersDialogOpen] = useState(false);
@@ -31,6 +64,9 @@ export default function PersonalRoom() {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const navigate = useNavigate();
 
+    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+    const getUserId = () => localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
     function createExpenseHandler() {
         setIsDialogOpen(true);
     }
@@ -40,7 +76,7 @@ export default function PersonalRoom() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 });
                 setRoom(response.data);
@@ -54,7 +90,7 @@ export default function PersonalRoom() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/room/${roomId}/users`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 });
                 setRoomUsers(response.data);
@@ -68,7 +104,7 @@ export default function PersonalRoom() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/user`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 });
                 setAllUsers(response.data);
@@ -102,7 +138,7 @@ export default function PersonalRoom() {
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 }
             );
@@ -149,7 +185,7 @@ export default function PersonalRoom() {
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 }
             );
@@ -167,12 +203,12 @@ export default function PersonalRoom() {
         try {
             const response = await axios.delete(`${BACKEND_URL}/room/${roomId}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    Authorization: `Bearer ${getToken()}`,
                 }
             })
             console.log(response);
             if (response.status === 200 && response.data.includes('Delete Successful')) {
-                navigate('/main-room', {state: {userId: localStorage.getItem('userId')}})
+                navigate('/main-room', { state: { userId: getUserId() } })
             }
         } catch (error: AxiosError | any) {
             console.log(error);
@@ -185,154 +221,347 @@ export default function PersonalRoom() {
     }
 
     if (isEmpty(room) || isNil(room)) {
-        return <div>Room Loading...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+            </div>
+        );
     }
 
     return (
-        <div className="flex p-2 m-2">
-            <Card className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6">
-                <CardHeader>
-                    <CardTitle>{get(room, 'name', 'Room')}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex">
-                    <div>
-                        <h2 className="text-lg font-semibold mb-4">Users in this room</h2>
-                        {isEmpty(roomUsers) ? (
-                            <p>No users found.</p>
-                        ) : (
-                            <ul className="list-disc list-inside">
-                                {roomUsers
-                                    .map((user) => (
-                                    <li key={get(user, 'id', 'N/A')}>
-                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+        <div className="container mx-auto py-8 px-4">
+            <div className="flex flex-col space-y-8">
+                {/* Header Section */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.history.back()}
+                            className="hover:bg-purple-100"
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">{get(room, 'name', 'Room')}</h1>
+                            <p className="text-muted-foreground">Manage expenses and members</p>
+                        </div>
                     </div>
-                </CardContent>
-                <div className="p-4 flex gap-2">
-                    <Button variant={'default'} onClick={createExpenseHandler}>
-                        Create Expense
+                    <Button
+                        variant="destructive"
+                        onClick={handleDeleteRoom}
+                        className="bg-red-500 hover:bg-red-600"
+                    >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Room
                     </Button>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create Expense</DialogTitle>
-                                <DialogDescription>Fill in the details of the expense</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="expenseName">Expense Name</Label>
-                                    <Input
-                                        id="expenseName"
-                                        value={expenseName}
-                                        onChange={(e) => setExpenseName(e.target.value)}
-                                    />
+                </div>
+
+                {/* Main Content */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Members Card */}
+                    <Card className="col-span-1 bg-gradient-to-br from-background to-muted/50">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <Users className="h-5 w-5 text-primary" />
+                                    <CardTitle>Room Members</CardTitle>
                                 </div>
-                                <div>
-                                    <Label htmlFor="expenseDescription">Expense Description</Label>
-                                    <Input
-                                        id="expenseDescription"
-                                        value={expenseDescription}
-                                        onChange={(e) => setExpenseDescription(e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="expenseAmount">Expense Amount</Label>
-                                    <Input
-                                        id="expenseAmount"
-                                        type="number"
-                                        value={expenseAmount}
-                                        onChange={(e) => setExpenseAmount(e.target.value)}
-                                    />
-                                </div>
-                                <p>Paid by You and Split equally with:</p>
-                                <ul>
-                                    {roomUsers
-                                        .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
-                                        .map((user) => (
-                                            <li key={get(user, 'id')}>
-                                                {get(user, 'firstName')} {get(user, 'lastName')}
-                                            </li>
-                                        ))}
-                                </ul>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="default" onClick={handleCreateExpense}>
-                                    Create
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsAddUsersDialogOpen(true)}
+                                >
+                                    <UserPlus className="h-4 w-4 mr-2" />
+                                    Add Members
                                 </Button>
-                                <Button variant="secondary" onClick={handleDialogClose}>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[300px] pr-4">
+                                {isEmpty(roomUsers) ? (
+                                    <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
+                                        <Users className="h-12 w-12 text-muted-foreground/50" />
+                                        <p className="text-sm text-muted-foreground">No members found</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {roomUsers.map((user) => (
+                                            <div
+                                                key={get(user, 'id', 'N/A')}
+                                                className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors"
+                                            >
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white">
+                                                    {get(user, 'firstName', 'N/A').charAt(0)}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium">
+                                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+
+                    {/* Expenses Section */}
+                    <Card className="col-span-1 lg:col-span-2 bg-gradient-to-br from-background to-muted/50">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <Receipt className="h-5 w-5 text-primary" />
+                                    <CardTitle>Expenses</CardTitle>
+                                </div>
+                                <div className="flex space-x-2">
+                                    <Button
+                                        onClick={createExpenseHandler}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                                    >
+                                        <DollarSign className="h-4 w-4 mr-2" />
+                                        Add Expense
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[400px] pr-4">
+                                {isEmpty(room?.expenses) ? (
+                                    <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
+                                        <Receipt className="h-12 w-12 text-muted-foreground/50" />
+                                        <p className="text-sm text-muted-foreground">No expenses found. Create your first expense!</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {room?.expenses?.map((expense: any) => {
+                                            const lender = expense.users.find((user: any) => user.isLender);
+                                            const borrowers = expense.users.filter((user: any) => !user.isLender);
+
+                                            return (
+                                                <motion.div
+                                                    key={expense.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="group cursor-pointer"
+                                                    onClick={() => navigate(`/room/${roomId}/expense/${expense.id}`)}
+                                                >
+                                                    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="space-y-1">
+                                                                <h3 className="font-medium group-hover:text-primary transition-colors">
+                                                                    {expense.name}
+                                                                </h3>
+                                                                {expense.description && (
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {expense.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Badge variant="outline">
+                                                                    <DollarSign className="h-3 w-3 mr-1" />
+                                                                    ${expense.amount}
+                                                                </Badge>
+                                                                <Badge variant="outline">
+                                                                    <Users className="h-3 w-3 mr-1" />
+                                                                    {borrowers.length + 1}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
+                                                                {get(lender, 'fullName', 'N/A').charAt(0)}
+                                                            </div>
+                                                            <span>Paid by {get(lender, 'fullName', 'N/A')}</span>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Create Expense Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl">Create New Expense</DialogTitle>
+                        <DialogDescription>Add expense details and split with room members</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="px-6 py-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseName">Expense Name</Label>
+                                    <div className="relative">
+                                        <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="expenseName"
+                                            placeholder="Enter expense name"
+                                            value={expenseName}
+                                            onChange={(e) => setExpenseName(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseDescription">Description (Optional)</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="expenseDescription"
+                                            placeholder="Add more details about the expense"
+                                            value={expenseDescription}
+                                            onChange={(e) => setExpenseDescription(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseAmount">Amount</Label>
+                                    <div className="relative">
+                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="expenseAmount"
+                                            type="number"
+                                            placeholder="0.00"
+                                            value={expenseAmount}
+                                            onChange={(e) => setExpenseAmount(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div className="space-y-2">
+                                    <Label>Split With</Label>
+                                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                        {roomUsers
+                                            .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
+                                            .map((user) => (
+                                                <div key={get(user, 'id')} className="flex items-center space-x-2">
+                                                    <UserCircle className="h-4 w-4 text-muted-foreground" />
+                                                    <span>{get(user, 'firstName')} {get(user, 'lastName')}</span>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={handleDialogClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleCreateExpense}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                            >
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Create Expense
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Users Dialog */}
+            <Dialog open={isAddUsersDialogOpen} onOpenChange={setIsAddUsersDialogOpen}>
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl">Add Members</DialogTitle>
+                        <DialogDescription>Select users to add to this room</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="px-6 py-4">
+                        <ScrollArea className="h-[300px]">
+                            {allUsers
+                                .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                                .length > 0 ? (
+                                <div className="space-y-2">
+                                    {allUsers
+                                        .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                                        .map((user) => (
+                                            <label
+                                                key={get(user, 'id')}
+                                                className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    id={`user-${get(user, 'id')}`}
+                                                    value={get(user, 'id')}
+                                                    className="rounded border-muted"
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedUsers([...selectedUsers, get(user, 'id')]);
+                                                        } else {
+                                                            setSelectedUsers(
+                                                                selectedUsers.filter((id) => id !== get(user, 'id'))
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white">
+                                                    {get(user, 'firstName', 'N/A').charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium">
+                                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <Users className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                                    <p className="text-muted-foreground">No users available to add</p>
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </div>
+
+                    {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))).length > 0 && (
+                        <DialogFooter className="p-6 pt-4 bg-muted/40">
+                            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsAddUsersDialogOpen(false)}
+                                >
                                     Cancel
                                 </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                    <Button variant={'default'} onClick={() => {
-                        navigate(`/room/${roomId}/expenses`);
-                    }}>
-                        Show Expenses
-                    </Button>
-                </div>
-                <div className="p-4">
-                    <Button variant={'default'} onClick={() => setIsAddUsersDialogOpen(true)}>
-                        Add Users to Room
-                    </Button>
-                    <Dialog open={isAddUsersDialogOpen} onOpenChange={setIsAddUsersDialogOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add Users to Room</DialogTitle>
-                                <DialogDescription>Select users to add to the room</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                                {allUsers
-                                    .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
-                                        .length > 0 ? (
-                                        allUsers
-                                            .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
-                                            .map((user) => (
-                                                <div key={get(user, 'id')}>
-                                                    <Label htmlFor={`user-${get(user, 'id')}`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            id={`user-${get(user, 'id')}`}
-                                                            value={get(user, 'id')}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    setSelectedUsers([...selectedUsers, get(user, 'id')]);
-                                                                } else {
-                                                                    setSelectedUsers(
-                                                                        selectedUsers.filter((id) => id !== get(user, 'id'))
-                                                                    );
-                                                                }
-                                                            }}
-                                                        />
-                                                        {get(user, 'firstName')} {get(user, 'lastName')}
-                                                    </Label>
-                                                </div>
-                                            ))
-                                    ) : (
-                                        <p>No users available.</p>
-                                    )}
+                                <Button
+                                    onClick={handleAddUsers}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                    disabled={selectedUsers.length === 0}
+                                >
+                                    <UserPlus className="h-4 w-4 mr-2" />
+                                    Add Selected Members
+                                </Button>
                             </div>
-                            {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))).length > 0 && (
-                                <DialogFooter>
-                                    <Button variant="default" onClick={handleAddUsers}>
-                                        Add
-                                    </Button>
-                                    <Button variant="secondary" onClick={() => setIsAddUsersDialogOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                </DialogFooter>
-                            )}
-                        </DialogContent>
-                    </Dialog>
-                    <Button className={"ml-2"} variant={"destructive"} onClick={handleDeleteRoom}>Delete Room</Button>
-                </div>
-                <CardFooter className="flex justify-end">
-                    <Button variant="secondary" onClick={() => window.history.back()}>Go Back</Button>
-                </CardFooter>
-            </Card>
+                        </DialogFooter>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

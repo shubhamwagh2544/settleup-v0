@@ -2,12 +2,20 @@ export type AccountType = 'saving' | 'current';
 
 type AccountStatus = 'active' | 'inactive' | 'suspended';
 
-export type Account = {
-    id: number;
+export interface Account {
+    id: string;
     accountName: string;
-    accountType: AccountType;
-    status: AccountStatus;
+    accountType: string;
     balance: number;
+    status: string;
+    expenses: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        amount: number;
+        date: string;
+        type: 'personal' | 'group';
+    }>;
     lastLoginAt?: string | null; // Using string to store DateTime as ISO format
     failedLoginAttempts?: number;
     verificationToken?: string | null;
@@ -17,4 +25,4 @@ export type Account = {
     createdAt: string; // Date stored as ISO string
     updatedAt: string;
     userId: number;
-};
+}

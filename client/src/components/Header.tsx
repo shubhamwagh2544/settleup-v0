@@ -90,7 +90,7 @@ export function Header() {
                         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
                             <span className="font-bold text-white">S</span>
                         </div>
-                        <span className="hidden font-bold text-xl md:inline-block">Splitwise</span>
+                        <span className="hidden font-bold text-xl md:inline-block">SettleUp</span>
                     </div>
 
                     {/* Desktop Navigation */}

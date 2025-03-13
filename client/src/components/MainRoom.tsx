@@ -35,12 +35,14 @@ export default function MainRoom() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const userId = get(location, 'state.userId') || localStorage.getItem('userId') || null;
+    const userId = get(location, 'state.userId') || localStorage.getItem('userId') || sessionStorage.getItem('userId') || null;
+
+    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
 
     useEffect(() => {
         async function fetchRooms() {
             const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
-                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+                headers: { "Authorization": `Bearer ${getToken()}` }
             });
             setRooms(response.data);
         }
@@ -48,7 +50,7 @@ export default function MainRoom() {
 
         async function fetchUserAccounts() {
             const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
-                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+                headers: { "Authorization": `Bearer ${getToken()}` }
             });
             setUserAccounts(response.data);
         }
@@ -63,7 +65,7 @@ export default function MainRoom() {
         }
         try {
             const response = await axios.post(`${BACKEND_URL}/room`, { name: room, userId }, {
-                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+                headers: { "Authorization": `Bearer ${getToken()}` }
             });
             if (response.status === 201) {
                 toast.success('Room created successfully!');
@@ -97,7 +99,7 @@ export default function MainRoom() {
                 userId: userId
             }, {
                 headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                    "Authorization": `Bearer ${getToken()}`
                 }
             });
 
@@ -123,7 +125,7 @@ export default function MainRoom() {
             <div className="flex flex-col space-y-8">
                 {/* Header Section */}
                 <div className="flex flex-col space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Welcome to Splitwise</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Welcome to SettleUp</h1>
                     <p className="text-muted-foreground">Manage your rooms and accounts</p>
                 </div>
 

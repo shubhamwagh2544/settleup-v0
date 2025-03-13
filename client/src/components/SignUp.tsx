@@ -48,7 +48,7 @@ export default function SignUp() {
                 const user = response.data.user;
                 socket?.emit('joinDefaultRoom', { user });
 
-                toast.success(`Welcome to Splitwise, ${get(user, 'firstName', "")}! 🎉`);
+                toast.success(`Welcome to SettleUp, ${get(user, 'firstName', "")}! 🎉`);
 
                 const token = response.data.token;
                 localStorage.setItem('token', token);
@@ -72,7 +72,7 @@ export default function SignUp() {
         <div className="min-h-screen flex">
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 to-indigo-600 p-12 text-white items-center justify-center">
                 <div className="max-w-lg">
-                    <h1 className="text-5xl font-bold mb-8">Join Splitwise Today</h1>
+                    <h1 className="text-5xl font-bold mb-8">Join SettleUp Today</h1>
                     <p className="text-lg text-purple-100 mb-8">
                         Create your account and start managing expenses with friends and family.
                         Split bills effortlessly and keep track of shared expenses.

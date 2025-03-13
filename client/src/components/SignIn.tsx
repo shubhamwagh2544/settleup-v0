@@ -56,9 +56,7 @@ export default function SignIn() {
             });
 
             if (response.status === 200) {
-                const user = response.data.user;
-                const token = response.data.token;
-
+                const {user, token} = response.data;
                 socket?.emit('joinDefaultRoom', { user });
                 toast.success(`Welcome back, ${get(user, 'firstName', "")}! 🎉`);
 
@@ -95,7 +93,7 @@ export default function SignIn() {
         <div className="min-h-screen flex">
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 to-indigo-600 p-12 text-white items-center justify-center">
                 <div className="max-w-lg">
-                    <h1 className="text-5xl font-bold mb-8">Welcome to Splitwise</h1>
+                    <h1 className="text-5xl font-bold mb-8">Welcome to SettleUp</h1>
                     <p className="text-lg text-purple-100 mb-8">
                         The easiest way to share expenses with friends and family.
                         Track bills, split costs, and settle up with ease.
