@@ -9,7 +9,7 @@ const expenseService = ExpenseService.getInstance();
 class ExpenseController {
     private static instance: ExpenseController;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance() {
         if (isNil(ExpenseController.instance)) {
@@ -20,8 +20,8 @@ class ExpenseController {
 
     async createExpense(req: Request, res: Response) {
         try {
-            const { userId, roomId, name, description,amount,splitWith } = req.body;
-            const expense = await expenseService.createExpense(userId, roomId, name, description,amount,splitWith);
+            const { userId, roomId, name, description, amount, splitWith } = req.body;
+            const expense = await expenseService.createExpense(userId, roomId, name, description, amount, splitWith);
             return res.status(201).json(expense);
         } catch (error) {
             return errorHandler(error, req, res);
@@ -40,9 +40,19 @@ class ExpenseController {
 
     async deleteExpense(req: Request, res: Response) {
         try {
-            const {expenseId} = req.params;
+            const { expenseId } = req.params;
             const success = await expenseService.deleteExpense(parseInt(expenseId));
             return res.status(200).json(success);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getExpenseById(req: Request, res: Response) {
+        try {
+            const { roomId, expenseId } = req.params;
+            const expense = await expenseService.getExpenseById(Number(roomId), Number(expenseId));
+            return res.status(200).json(expense);
         } catch (error) {
             return errorHandler(error, req, res);
         }

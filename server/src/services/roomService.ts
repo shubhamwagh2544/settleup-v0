@@ -9,7 +9,7 @@ const userService = UserService.getInstance();
 class RoomService {
     private static instance: RoomService;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance() {
         if (isNil(RoomService.instance)) {
@@ -116,11 +116,46 @@ class RoomService {
             },
             include: {
                 users: true,
+                expenses: {
+                    include: {
+                        users: true
+                    }
+                }
             },
         });
         if (isNil(room)) {
             throw new CustomError('Room not found', 404);
         }
+
+        // Add user details to expenses
+        for (const expense of room.expenses) {
+            const users = expense.users;
+            const userIds = users.map(user => user.userId);
+
+            const userDetails = await prisma.user.findMany({
+                where: {
+                    id: {
+                        in: userIds
+                    },
+                },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            });
+
+            // Combine user details with expense user info
+            expense.users = users.map(userExpense => {
+                const userDetail = userDetails.find(u => u.id === userExpense.userId);
+                return {
+                    ...userExpense,
+                    fullName: userDetail ? `${userDetail.firstName} ${userDetail.lastName}` : 'Unknown',
+                    id: userExpense.userId
+                };
+            });
+        }
+
         return room;
     }
 
@@ -231,7 +266,7 @@ class RoomService {
         // delete all expenses and then associated room
         await prisma.$transaction([
             prisma.expense.deleteMany({ where: { roomId } }),
-            prisma.userRoom.deleteMany({ where: { roomId }}),
+            prisma.userRoom.deleteMany({ where: { roomId } }),
             prisma.room.delete({ where: { id: roomId } })
         ])
 

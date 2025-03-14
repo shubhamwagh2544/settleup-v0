@@ -7,6 +7,7 @@ import { SocketProvider } from '@/SocketProvider.tsx';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import SignIn from './components/SignIn.tsx';
 import SignUp from './components/SignUp.tsx';
+import PersonalExpense from './components/PersonalExpense.tsx';
 
 function Layout() {
     const location = useLocation();
@@ -24,6 +25,7 @@ function Layout() {
                 <Route path="/room/:roomId" element={<PersonalRoom />} />
                 <Route path="/room/:roomId/expenses" element={<RoomExpenses />} />
                 <Route path="/account/:accountId" element={<PersonalAccount />} />
+                <Route path="/room/:roomId/expenses/:expenseId" element={<PersonalExpense />} />
             </Routes>
         </>
     );

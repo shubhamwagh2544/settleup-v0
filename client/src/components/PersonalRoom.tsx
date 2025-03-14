@@ -3,36 +3,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config';
 import { get, isEmpty, isNil } from 'lodash';
-import { Account } from '@/types/Account';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
-    ArrowLeft,
-    Wallet,
-    PlusCircle,
-    SendHorizontal,
-    ClockIcon,
-    CreditCard,
-    CheckCircle2,
-    XCircle,
-    DollarSign,
-    ArrowUpRight,
-    ArrowDownRight,
-    History,
-    Receipt,
-    Users,
-    UserPlus,
-    Trash2,
-    SplitSquareVertical,
-    UserCircle
-} from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface Room {
@@ -44,9 +31,12 @@ interface Room {
         description?: string;
         amount: number;
         users: Array<{
-            id: string;
-            fullName: string;
+            userId: number;
+            expenseId: string;
             isLender: boolean;
+            amountOwed: number;
+            fullName: string;
+            id: number;
         }>;
     }>;
 }
@@ -151,11 +141,9 @@ export default function PersonalRoom() {
             console.error('Error adding users to room', error);
             if (error.response.data && error.response.data.statusCode === 409) {
                 toast.error(error.response.data.message);
-            }
-            else if (error.response.data && error.response.data.statusCode === 400) {
+            } else if (error.response.data && error.response.data.statusCode === 400) {
                 toast.error(error.response.data.message);
-            }
-            else {
+            } else {
                 toast.error('Error adding user to room');
             }
         }
@@ -181,7 +169,9 @@ export default function PersonalRoom() {
                     name: expenseName,
                     description: expenseDescription,
                     amount: parseFloat(expenseAmount),
-                    splitWith: roomUsers.filter((user) => get(user, 'id') !== get(room, 'users[0].userId')).map((user) => get(user, 'id')),
+                    splitWith: roomUsers
+                        .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
+                        .map((user) => get(user, 'id')),
                 },
                 {
                     headers: {
@@ -204,16 +194,16 @@ export default function PersonalRoom() {
             const response = await axios.delete(`${BACKEND_URL}/room/${roomId}`, {
                 headers: {
                     Authorization: `Bearer ${getToken()}`,
-                }
-            })
+                },
+            });
             console.log(response);
             if (response.status === 200 && response.data.includes('Delete Successful')) {
-                navigate('/main-room', { state: { userId: getUserId() } })
+                navigate('/main-room', { state: { userId: getUserId() } });
             }
         } catch (error: AxiosError | any) {
             console.log(error);
             if (error.status === 409 || error.status === 404) {
-                toast.error(`${error.response.data.message}`)
+                toast.error(`${error.response.data.message}`);
             } else {
                 toast.error('Error deleting room!');
             }
@@ -237,7 +227,7 @@ export default function PersonalRoom() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => window.history.back()}
+                            onClick={() => navigate('/main-room')}
                             className="hover:bg-purple-100"
                         >
                             <ArrowLeft className="h-5 w-5" />
@@ -247,11 +237,7 @@ export default function PersonalRoom() {
                             <p className="text-muted-foreground">Manage expenses and members</p>
                         </div>
                     </div>
-                    <Button
-                        variant="destructive"
-                        onClick={handleDeleteRoom}
-                        className="bg-red-500 hover:bg-red-600"
-                    >
+                    <Button variant="destructive" onClick={handleDeleteRoom} className="bg-red-500 hover:bg-red-600">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Room
                     </Button>
@@ -267,11 +253,7 @@ export default function PersonalRoom() {
                                     <Users className="h-5 w-5 text-primary" />
                                     <CardTitle>Room Members</CardTitle>
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsAddUsersDialogOpen(true)}
-                                >
+                                <Button variant="outline" size="sm" onClick={() => setIsAddUsersDialogOpen(true)}>
                                     <UserPlus className="h-4 w-4 mr-2" />
                                     Add Members
                                 </Button>
@@ -331,13 +313,15 @@ export default function PersonalRoom() {
                                 {isEmpty(room?.expenses) ? (
                                     <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
                                         <Receipt className="h-12 w-12 text-muted-foreground/50" />
-                                        <p className="text-sm text-muted-foreground">No expenses found. Create your first expense!</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            No expenses found. Create your first expense!
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
                                         {room?.expenses?.map((expense: any) => {
                                             const lender = expense.users.find((user: any) => user.isLender);
-                                            const borrowers = expense.users.filter((user: any) => !user.isLender);
+                                            // const borrowers = expense.users.filter((user: any) => !user.isLender);
 
                                             return (
                                                 <motion.div
@@ -345,7 +329,7 @@ export default function PersonalRoom() {
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     className="group cursor-pointer"
-                                                    onClick={() => navigate(`/room/${roomId}/expense/${expense.id}`)}
+                                                    onClick={() => navigate(`/room/${roomId}/expenses/${expense.id}`)}
                                                 >
                                                     <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
                                                         <div className="flex items-start justify-between">
@@ -361,21 +345,21 @@ export default function PersonalRoom() {
                                                             </div>
                                                             <div className="flex items-center space-x-2">
                                                                 <Badge variant="outline">
-                                                                    <DollarSign className="h-3 w-3 mr-1" />
-                                                                    ${expense.amount}
+                                                                    <DollarSign className="h-3 w-3 mr-1" />$
+                                                                    {expense.amount}
                                                                 </Badge>
                                                                 <Badge variant="outline">
                                                                     <Users className="h-3 w-3 mr-1" />
-                                                                    {borrowers.length + 1}
+                                                                    {expense.users.length}
                                                                 </Badge>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                                                             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
-                                                                {get(lender, 'fullName', 'N/A').charAt(0)}
+                                                                {lender?.fullName?.charAt(0) || 'U'}
                                                             </div>
-                                                            <span>Paid by {get(lender, 'fullName', 'N/A')}</span>
+                                                            <span>Paid by {lender?.fullName || 'Unknown'}</span>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -455,7 +439,9 @@ export default function PersonalRoom() {
                                             .map((user) => (
                                                 <div key={get(user, 'id')} className="flex items-center space-x-2">
                                                     <UserCircle className="h-4 w-4 text-muted-foreground" />
-                                                    <span>{get(user, 'firstName')} {get(user, 'lastName')}</span>
+                                                    <span>
+                                                        {get(user, 'firstName')} {get(user, 'lastName')}
+                                                    </span>
                                                 </div>
                                             ))}
                                     </div>
@@ -466,10 +452,7 @@ export default function PersonalRoom() {
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={handleDialogClose}
-                            >
+                            <Button variant="outline" onClick={handleDialogClose}>
                                 Cancel
                             </Button>
                             <Button
@@ -494,12 +477,15 @@ export default function PersonalRoom() {
 
                     <div className="px-6 py-4">
                         <ScrollArea className="h-[300px]">
-                            {allUsers
-                                .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
-                                .length > 0 ? (
+                            {allUsers.filter(
+                                (user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))
+                            ).length > 0 ? (
                                 <div className="space-y-2">
                                     {allUsers
-                                        .filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                                        .filter(
+                                            (user) =>
+                                                !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))
+                                        )
                                         .map((user) => (
                                             <label
                                                 key={get(user, 'id')}
@@ -540,26 +526,24 @@ export default function PersonalRoom() {
                         </ScrollArea>
                     </div>
 
-                    {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id'))).length > 0 && (
-                        <DialogFooter className="p-6 pt-4 bg-muted/40">
-                            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsAddUsersDialogOpen(false)}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleAddUsers}
-                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                                    disabled={selectedUsers.length === 0}
-                                >
-                                    <UserPlus className="h-4 w-4 mr-2" />
-                                    Add Selected Members
-                                </Button>
-                            </div>
-                        </DialogFooter>
-                    )}
+                    {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
+                        .length > 0 && (
+                            <DialogFooter className="p-6 pt-4 bg-muted/40">
+                                <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                                    <Button variant="outline" onClick={() => setIsAddUsersDialogOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleAddUsers}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                        disabled={selectedUsers.length === 0}
+                                    >
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        Add Selected Members
+                                    </Button>
+                                </div>
+                            </DialogFooter>
+                        )}
                 </DialogContent>
             </Dialog>
         </div>

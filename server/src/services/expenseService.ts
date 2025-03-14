@@ -7,7 +7,7 @@ const prisma = DbConfig.getInstance();
 class ExpenseService {
     private static instance: ExpenseService;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance() {
         if (isNil(ExpenseService.instance)) {
@@ -97,7 +97,7 @@ class ExpenseService {
                     }),
                 });
 
-                data = {expense, room, userExpense, expenseUsers};
+                data = { expense, room, userExpense, expenseUsers };
             });
 
             return data;
@@ -149,7 +149,7 @@ class ExpenseService {
                 let obj = {}
                 users.forEach(user => {
                     if (user.userId === expenseUser.id) {
-                        obj = {...user, ...expenseUser};
+                        obj = { ...user, ...expenseUser };
                     }
                 })
                 return obj;
@@ -167,7 +167,7 @@ class ExpenseService {
             }
         });
         if (isNil(expense)) {
-            throw new CustomError('Expense not Found' ,404);
+            throw new CustomError('Expense not Found', 404);
         }
         // check if expense is settled
         const userExpenseEntries = await prisma.userExpense.findMany({
@@ -188,6 +188,57 @@ class ExpenseService {
             }
         })
         return 'Delete Successful';
+    }
+
+    async getExpenseById(roomId: number, expenseId: number) {
+        if (isNil(roomId) || isNil(expenseId)) {
+            throw new CustomError('Invalid RoomId or ExpenseId', 400);
+        }
+
+        const expense = await prisma.expense.findUnique({
+            where: {
+                id: expenseId,
+                roomId: roomId
+            },
+            include: {
+                users: true
+            }
+        });
+
+        if (isNil(expense)) {
+            throw new CustomError('Expense not found', 404);
+        }
+
+        // Get user details for the expense
+        const userIds = expense.users.map(user => user.userId);
+        const userDetails = await prisma.user.findMany({
+            where: {
+                id: {
+                    in: userIds
+                }
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+            }
+        });
+
+        // Combine user details with expense user info
+        const enrichedUsers = expense.users.map(userExpense => {
+            const userDetail = userDetails.find(u => u.id === userExpense.userId);
+            return {
+                ...userExpense,
+                fullName: userDetail ? `${userDetail.firstName} ${userDetail.lastName}` : 'Unknown',
+                email: userDetail?.email
+            };
+        });
+
+        return {
+            ...expense,
+            users: enrichedUsers
+        };
     }
 }
 
