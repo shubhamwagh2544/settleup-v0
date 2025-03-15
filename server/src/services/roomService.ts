@@ -141,7 +141,7 @@ class RoomService {
                 select: {
                     id: true,
                     firstName: true,
-                    lastName: true
+                    lastName: true,
                 }
             });
 
@@ -174,15 +174,20 @@ class RoomService {
             throw new CustomError('Room not found', 404);
         }
 
-        // room.users contain user-room relations
-        const userIds = map(room.users, 'userId');
-        return prisma.user.findMany({
+        // Get users with their details
+        const users = await prisma.user.findMany({
             where: {
                 id: {
-                    in: userIds,
+                    in: map(room.users, 'userId'),
                 },
             },
         });
+
+        // Combine user details with isAdmin information from room.users
+        return users.map(user => ({
+            ...user,
+            isAdmin: room.users.find(ru => ru.userId === user.id)?.isAdmin || false
+        }));
     }
 
     async addUsersToRoom(roomId: number, userIds: number[]) {

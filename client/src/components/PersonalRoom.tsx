@@ -276,10 +276,24 @@ export default function PersonalRoom() {
                                                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white">
                                                     {get(user, 'firstName', 'N/A').charAt(0)}
                                                 </div>
-                                                <div className="flex-1">
-                                                    <p className="font-medium">
-                                                        {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
-                                                    </p>
+                                                <div className="flex-1 flex items-center justify-between">
+                                                    <div>
+                                                        <p className="font-medium">
+                                                            {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                                        </p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {get(user, 'email', 'N/A')}
+                                                        </p>
+                                                    </div>
+                                                    {get(user, 'isAdmin') && (
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="bg-gradient-to-r from-purple-600/10 to-indigo-600/10 text-primary border-0 
+                                                            px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase"
+                                                        >
+                                                            Admin
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

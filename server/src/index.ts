@@ -40,8 +40,8 @@ DbConfig.createDefaultRoom().then((room) => {
 });
 
 // create a admin user
-DbConfig.createAdminUser().then((user) => {
-    console.log('Admin user created:', user.id);
+DbConfig.createSuperAdminUser().then((user) => {
+    console.log('Super Admin user created:', user.id);
 });
 
 // middlewares

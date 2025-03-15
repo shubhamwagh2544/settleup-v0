@@ -1,0 +1,37 @@
+-- -- Insert 10 dummy users with hashed passwords (password is 'password123' for all users)
+-- INSERT INTO "User" (email, "firstName", "lastName", "password", "createdAt", "updatedAt", "isActive")
+-- VALUES
+--     ('john.doe@example.com', 'John', 'Doe', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('emma.wilson@example.com', 'Emma', 'Wilson', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('michael.brown@example.com', 'Michael', 'Brown', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('sarah.taylor@example.com', 'Sarah', 'Taylor', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('david.miller@example.com', 'David', 'Miller', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('lisa.anderson@example.com', 'Lisa', 'Anderson', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('james.martin@example.com', 'James', 'Martin', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('olivia.white@example.com', 'Olivia', 'White', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('daniel.clark@example.com', 'Daniel', 'Clark', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true),
+--     ('sophia.lee@example.com', 'Sophia', 'Lee', '$2b$10$6jM7UIL/f6PXvM0Jx6VYQ.0SMobkHY9mGz9Sz7HGY.OGhqAGBH1e2', NOW(), NOW(), true);
+--
+-- -- Create default accounts for each user
+-- INSERT INTO "Account" ("userId", "accountName", "accountType", "balance", "status", "createdAt", "updatedAt")
+-- SELECT
+--     id as "userId",
+--     CONCAT(u."firstName", '''s Account') as "accountName",
+--     'personal' as "accountType",
+--     1000.00 as "balance",
+--     'active' as "status",
+--     NOW() as "createdAt",
+--     NOW() as "updatedAt"
+-- FROM "User" u
+-- WHERE u.email IN (
+--     'john.doe@example.com',
+--     'emma.wilson@example.com',
+--     'michael.brown@example.com',
+--     'sarah.taylor@example.com',
+--     'david.miller@example.com',
+--     'lisa.anderson@example.com',
+--     'james.martin@example.com',
+--     'olivia.white@example.com',
+--     'daniel.clark@example.com',
+--     'sophia.lee@example.com'
+-- );

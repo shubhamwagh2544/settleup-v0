@@ -68,16 +68,16 @@ class DbConfig {
         return defaultRoom;
     }
 
-    public static async createAdminUser() {
-        let adminUser;
-        adminUser = await DbConfig.prisma.user.findUnique({
+    public static async createSuperAdminUser() {
+        let superAdminUser;
+        superAdminUser = await DbConfig.prisma.user.findUnique({
             where: {
                 id: 0,
                 email: 'admin@splitwise.com',
             },
         });
-        if (!adminUser) {
-            adminUser = await DbConfig.prisma.user.create({
+        if (!superAdminUser) {
+            superAdminUser = await DbConfig.prisma.user.create({
                 data: {
                     id: 0,
                     email: 'admin@splitwise.com',
@@ -87,18 +87,18 @@ class DbConfig {
                     createdAt: new Date(),
                     updatedAt: new Date(),
                     isActive: true,
-                    isAdmin: true,
+                    isSuperAdmin: true,
                 },
                 select: {
                     id: true,
                     email: true,
                     firstName: true,
                     lastName: true,
-                    isAdmin: true,
+                    isSuperAdmin: true,
                 },
             });
         }
-        return adminUser;
+        return superAdminUser;
     }
 }
 
