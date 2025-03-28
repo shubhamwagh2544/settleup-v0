@@ -231,7 +231,8 @@ class ExpenseService {
             return {
                 ...userExpense,
                 fullName: userDetail ? `${userDetail.firstName} ${userDetail.lastName}` : 'Unknown',
-                email: userDetail?.email
+                email: userDetail?.email,
+                roomId
             };
         });
 
@@ -239,6 +240,44 @@ class ExpenseService {
             ...expense,
             users: enrichedUsers
         };
+    }
+
+    async updateExpense(roomId: number, expenseId: number, userId: number, amount: number) {
+        // check if expense exists for roomId, expenseId and userId
+        const expense = await this.getExpenseById(roomId, expenseId);
+        if (!expense) {
+            throw new CustomError('Expense not found', 404);
+        }
+
+        // Find the user in the expense
+        const expenseUser = expense.users.find(
+            (user) => user.userId === userId && user.roomId === roomId && user.expenseId === expenseId
+        );
+        if (!expenseUser) {
+            throw new CustomError('Expense does not exist for user', 404);
+        }
+
+        // Validate amount
+        const amountOwed = Number(expenseUser.amountOwed);
+        if (Number(amount) !== amountOwed) {
+            throw new CustomError('Amount does not match amount owed by user', 409);
+        }
+
+        // Update the userExpense
+        await prisma.userExpense.update({
+            where: {
+                userId_expenseId: {
+                    userId,
+                    expenseId
+                }
+            },
+            data: {
+                amountOwed: 0,
+                isSettled: true
+            }
+        });
+
+        return {message: 'Expense settled successfully'};
     }
 }
 

@@ -58,6 +58,18 @@ class ExpenseController {
         }
     }
 
+    async updateExpense(req: Request, res: Response) {
+        try {
+            const { roomId, expenseId } = req.params;
+            const { userId, amount } = req.body;
+            const expense = await expenseService.updateExpense(Number(roomId), Number(expenseId), Number(userId), Number(amount));
+            return res.status(200).json(expense);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+
+    }
+
 }
 
 export default ExpenseController;

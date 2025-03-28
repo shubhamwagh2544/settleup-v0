@@ -26,6 +26,7 @@ class ExpenseRoutes {
         this.expenseRouter.get('/room/:roomId', authMiddleware, expenseController.getExpensesForRoom);
         this.expenseRouter.delete('/:expenseId', authMiddleware, expenseController.deleteExpense);
         this.expenseRouter.get('/room/:roomId/expense/:expenseId', authMiddleware, expenseController.getExpenseById);
+        this.expenseRouter.put('/room/:roomId/expense/:expenseId', authMiddleware, expenseController.updateExpense);
     }
 
     public getRouter() {

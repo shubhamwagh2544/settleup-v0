@@ -117,6 +117,7 @@ export default function PersonalRoom() {
         setExpenseName('');
         setExpenseDescription('');
         setExpenseAmount('');
+        setSelectedUsers([]);
     }
 
     async function handleAddUsers() {
@@ -159,6 +160,10 @@ export default function PersonalRoom() {
             toast.error('Expense amount must be a number');
             return;
         }
+        if (selectedUsers.length === 0) {
+            toast.error('Please select at least one user to split with');
+            return;
+        }
 
         try {
             const response = await axios.post(
@@ -169,9 +174,7 @@ export default function PersonalRoom() {
                     name: expenseName,
                     description: expenseDescription,
                     amount: parseFloat(expenseAmount),
-                    splitWith: roomUsers
-                        .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
-                        .map((user) => get(user, 'id')),
+                    splitWith: selectedUsers,
                 },
                 {
                     headers: {
@@ -182,6 +185,7 @@ export default function PersonalRoom() {
             console.log('Expense created', response.data);
             toast.success('Expense created successfully');
             handleDialogClose();
+            setSelectedUsers([]);
         } catch (error: any) {
             console.error('Error creating expense', error);
             toast.error('Error creating expense');
@@ -237,10 +241,12 @@ export default function PersonalRoom() {
                             <p className="text-muted-foreground">Manage expenses and members</p>
                         </div>
                     </div>
-                    <Button variant="destructive" onClick={handleDeleteRoom} className="bg-red-500 hover:bg-red-600">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Room
-                    </Button>
+                    {roomUsers.some(user => get(user, 'id') === Number(getUserId()) && get(user, 'isAdmin')) && (
+                        <Button variant="destructive" onClick={handleDeleteRoom} className="bg-red-500 hover:bg-red-600">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Room
+                        </Button>
+                    )}
                 </div>
 
                 {/* Main Content */}
@@ -452,6 +458,19 @@ export default function PersonalRoom() {
                                             .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
                                             .map((user) => (
                                                 <div key={get(user, 'id')} className="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`user-${get(user, 'id')}`}
+                                                        className="rounded border-muted"
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedUsers([...selectedUsers, get(user, 'id')]);
+                                                            } else {
+                                                                setSelectedUsers(selectedUsers.filter(id => id !== get(user, 'id')));
+                                                            }
+                                                        }}
+                                                        checked={selectedUsers.includes(get(user, 'id'))}
+                                                    />
                                                     <UserCircle className="h-4 w-4 text-muted-foreground" />
                                                     <span>
                                                         {get(user, 'firstName')} {get(user, 'lastName')}

@@ -73,16 +73,16 @@ class DbConfig {
         superAdminUser = await DbConfig.prisma.user.findUnique({
             where: {
                 id: 0,
-                email: 'admin@splitwise.com',
+                email: 'superadmin@settleup.com',
             },
         });
         if (!superAdminUser) {
             superAdminUser = await DbConfig.prisma.user.create({
                 data: {
                     id: 0,
-                    email: 'admin@splitwise.com',
-                    password: 'admin',
-                    firstName: 'Admin',
+                    email: 'superadmin@settleup.com',
+                    password: 'superadmin',
+                    firstName: 'SuperAdmin',
                     lastName: 'User',
                     createdAt: new Date(),
                     updatedAt: new Date(),

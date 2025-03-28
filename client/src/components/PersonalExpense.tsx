@@ -8,8 +8,16 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ExpenseUser {
     userId: number;
@@ -36,6 +44,8 @@ export default function PersonalExpense() {
     const navigate = useNavigate();
     const [expense, setExpense] = useState<Expense | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [selectedBorrower, setSelectedBorrower] = useState<ExpenseUser | null>(null);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -82,6 +92,42 @@ export default function PersonalExpense() {
     const borrowers = expense.users.filter((user) => !user.isLender);
     const isLender = lender?.userId === Number(userId);
 
+    const handleSettleUp = (borrower: ExpenseUser) => {
+        setSelectedBorrower(borrower);
+        setIsPaymentDialogOpen(true);
+    };
+
+    const handleConfirmPayment = async () => {
+        if (!selectedBorrower) return;
+
+        try {
+            const response = await axios.put(
+                `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
+                {
+                    userId: selectedBorrower.userId,
+                    amount: selectedBorrower.amountOwed
+                },
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+
+            if (response.status === 200) {
+                toast.success('Payment processed successfully');
+                setIsPaymentDialogOpen(false);
+                // Refresh expense data
+                const updatedResponse = await axios.get(
+                    `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
+                    { headers: { Authorization: `Bearer ${getToken()}` } }
+                );
+                setExpense(updatedResponse.data);
+            }
+        } catch (error) {
+            console.error('Error processing payment:', error);
+            toast.error('Failed to process payment');
+        }
+    };
+
     return (
         <div className="container mx-auto py-8 px-4">
             <div className="flex flex-col space-y-8">
@@ -115,7 +161,7 @@ export default function PersonalExpense() {
                         <CardContent className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Amount</span>
-                                <Badge variant="outline" className="text-lg">
+                                <Badge variant="default" className="text-lg">
                                     ${expense.amount}
                                 </Badge>
                             </div>
@@ -170,7 +216,7 @@ export default function PersonalExpense() {
                                             key={borrower.userId}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="p-4 rounded-lg border"
+                                            className="p-4 rounded-lg border hover:border-primary/20 transition-colors"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-3">
@@ -184,9 +230,20 @@ export default function PersonalExpense() {
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <Badge variant={borrower.isSettled ? 'success' : 'destructive'}>
-                                                    ${borrower.amountOwed}
-                                                </Badge>
+                                                <div className="flex items-center space-x-4">
+                                                    <Badge variant={borrower.isSettled ? 'success' : 'destructive'}>
+                                                        ${borrower.amountOwed}
+                                                    </Badge>
+                                                    {!borrower.isSettled && borrower.userId === Number(userId) && (
+                                                        <Button
+                                                            onClick={() => handleSettleUp(borrower)}
+                                                            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-sm"
+                                                        >
+                                                            <CreditCard className="h-4 w-4 mr-2" />
+                                                            SettleUp
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </motion.div>
                                     ))}
@@ -196,6 +253,55 @@ export default function PersonalExpense() {
                     </Card>
                 </div>
             </div>
+
+            {/* Payment Dialog */}
+            <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
+                        <DialogDescription>
+                            Review and confirm your payment details
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedBorrower && (
+                        <div className="px-6 py-4 space-y-4">
+                            <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">Amount to Pay</p>
+                                <p className="text-2xl font-bold text-primary">
+                                    ${selectedBorrower.amountOwed}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">Payment Method</p>
+                                <div className="flex items-center space-x-3 p-3 rounded-lg border">
+                                    <CreditCard className="h-5 w-5 text-primary" />
+                                    <p className="font-medium">Credit/Debit Card</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsPaymentDialogOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleConfirmPayment}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                            >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Confirm Payment
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
