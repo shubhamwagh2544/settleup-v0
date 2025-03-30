@@ -14,12 +14,18 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+import BACKEND_URL from '@/config';
 
 export function Header() {
     const location = useLocation();
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [notifications, setNotifications] = useState(3); // Example notification count
+    const [user, setUser] = useState({ firstName: '', lastName: '', email: '' });
+
+    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+    const getUserId = () => localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     useEffect(() => {
         const handleScroll = () => {
@@ -28,6 +34,25 @@ export function Header() {
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        async function fetchUserDetails() {
+            try {
+                const userId = getUserId();
+                if (!userId) return;
+
+                const response = await axios.get(`${BACKEND_URL}/user/${userId}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+
+                setUser(response.data);
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+            }
+        }
+
+        fetchUserDetails();
     }, []);
 
     const handleSignOut = () => {
@@ -164,8 +189,12 @@ export function Header() {
                             <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium">User Name</p>
-                                        <p className="text-xs text-muted-foreground">user@example.com</p>
+                                        <p className="text-sm font-medium">
+                                            {user.firstName} {user.lastName}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {user.email}
+                                        </p>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />

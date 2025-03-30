@@ -268,12 +268,29 @@ class RoomService {
             throw new CustomError('Room Expenses are not settled', 409);
         }
 
-        // delete all expenses and then associated room
+        // Delete in correct order to respect foreign key constraints
         await prisma.$transaction([
-            prisma.expense.deleteMany({ where: { roomId } }),
-            prisma.userRoom.deleteMany({ where: { roomId } }),
-            prisma.room.delete({ where: { id: roomId } })
-        ])
+            // First delete UserExpense records
+            prisma.userExpense.deleteMany({
+                where: {
+                    expenseId: {
+                        in: roomExpenses.map(expense => expense.id)
+                    }
+                }
+            }),
+            // Then delete Expenses
+            prisma.expense.deleteMany({
+                where: { roomId }
+            }),
+            // Then delete UserRoom records
+            prisma.userRoom.deleteMany({
+                where: { roomId }
+            }),
+            // Finally delete the Room
+            prisma.room.delete({
+                where: { id: roomId }
+            })
+        ]);
 
         return 'Delete Successful';
     }

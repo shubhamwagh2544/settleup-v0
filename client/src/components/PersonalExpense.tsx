@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -46,6 +46,8 @@ export default function PersonalExpense() {
     const [loading, setLoading] = useState(true);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [selectedBorrower, setSelectedBorrower] = useState<ExpenseUser | null>(null);
+    const [allUsersSettled, setAllUsersSettled] = useState(false);
+    const [isDeleteExpenseDialogOpen, setIsDeleteExpenseDialogOpen] = useState(false);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -67,6 +69,14 @@ export default function PersonalExpense() {
 
         fetchExpense();
     }, [expenseId, roomId]);
+
+    useEffect(() => {
+        if (expense) {
+            const borrowers = expense.users.filter(user => !user.isLender);
+            const allSettled = borrowers.every(user => user.isSettled);
+            setAllUsersSettled(allSettled);
+        }
+    }, [expense]);
 
     if (loading) {
         return (
@@ -128,6 +138,55 @@ export default function PersonalExpense() {
         }
     };
 
+    async function handleSettleExpense() {
+        if (!expense) return;
+
+        try {
+            const response = await axios.put(
+                `${BACKEND_URL}/expense/${expense.id}/settle`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+
+            if (response.status === 200) {
+                toast.success('Expense settled successfully');
+                // Refresh expense data
+                const updatedResponse = await axios.get(
+                    `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
+                    { headers: { Authorization: `Bearer ${getToken()}` } }
+                );
+                setExpense(updatedResponse.data);
+            }
+        } catch (error) {
+            console.error('Error settling expense:', error);
+            toast.error('Failed to settle expense');
+        }
+    }
+
+    async function handleDeleteExpense() {
+        try {
+            const response = await axios.delete(
+                `${BACKEND_URL}/expense/${expenseId}`,
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+
+            if (response?.data.includes('Delete Successful') && response?.status === 200) {
+                toast.success('Expense deleted successfully');
+                navigate(`/room/${roomId}`);
+            }
+        } catch (error: AxiosError | any) {
+            if (error.response?.status === 409 || error.response?.status === 404) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('Failed to delete expense');
+            }
+        }
+    }
+
     return (
         <div className="container mx-auto py-8 px-4">
             <div className="flex flex-col space-y-8">
@@ -143,7 +202,12 @@ export default function PersonalExpense() {
                         </div>
                     </div>
                     {isLender && (
-                        <Button variant="destructive" size="icon">
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => setIsDeleteExpenseDialogOpen(true)}
+                            className="bg-red-500 hover:bg-red-600"
+                        >
                             <Trash2 className="h-5 w-5" />
                         </Button>
                     )}
@@ -182,6 +246,37 @@ export default function PersonalExpense() {
                                     {expense.isSettled ? 'Settled' : 'Pending'}
                                 </Badge>
                             </div>
+
+                            {isLender && !expense.isSettled && (
+                                <>
+                                    <div className="space-y-4">
+                                        <h3 className="font-medium">Settlement Status</h3>
+                                        <div className="rounded-lg bg-muted p-4">
+                                            {allUsersSettled ? (
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center text-green-600">
+                                                        <CheckCircle className="h-5 w-5 mr-2" />
+                                                        <span className="font-medium">All users have settled their dues</span>
+                                                    </div>
+                                                    <Button
+                                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                                        onClick={handleSettleExpense}
+                                                    >
+                                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                                        Settle Expense
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center text-yellow-600">
+                                                    <Clock className="h-5 w-5 mr-2" />
+                                                    <span className="font-medium">Waiting for all users to settle their dues</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                </>
+                            )}
 
                             <Separator />
 
@@ -297,6 +392,45 @@ export default function PersonalExpense() {
                             >
                                 <CreditCard className="h-4 w-4 mr-2" />
                                 Confirm Payment
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Expense Confirmation Dialog */}
+            <Dialog open={isDeleteExpenseDialogOpen} onOpenChange={setIsDeleteExpenseDialogOpen}>
+                <DialogContent className="sm:max-w-[400px] p-0 gap-0">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl text-red-600">Delete Expense</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this expense? This action cannot be undone.
+                            {expense && !expense.isSettled && (
+                                <p className="mt-2 text-red-500">
+                                    Note: This expense must be settled before deletion.
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsDeleteExpenseDialogOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={async () => {
+                                    await handleDeleteExpense();
+                                    setIsDeleteExpenseDialogOpen(false);
+                                }}
+                                className="bg-red-500 hover:bg-red-600"
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Expense
                             </Button>
                         </div>
                     </DialogFooter>

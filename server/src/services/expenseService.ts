@@ -1,6 +1,8 @@
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
 import { isEmpty, isNil, map } from 'lodash';
+import { Prisma } from '@prisma/client';
+import { roundMoney } from '../lib/money';
 
 const prisma = DbConfig.getInstance();
 
@@ -49,6 +51,13 @@ class ExpenseService {
             throw new CustomError('Expense splitter Users not part of the room', 404);
         }
 
+        const numPeople = splitWith.length + 1; // +1 for the lender
+        const amountPerPerson = roundMoney(amount / numPeople);
+
+        // Adjust for rounding errors
+        const totalSplit = roundMoney(amountPerPerson * numPeople);
+        const adjustment = roundMoney(amount - totalSplit);
+
         let data;
         try {
             // prisma transaction
@@ -58,7 +67,7 @@ class ExpenseService {
                     data: {
                         name,
                         description,
-                        amount,
+                        amount: new Prisma.Decimal(amount),
                         roomId,
                     },
                 });
@@ -76,31 +85,29 @@ class ExpenseService {
                     },
                 });
 
-                // add the expense to the creator
-                const userExpense = await prisma.userExpense.create({
+                // Create lender's expense record (they get any rounding adjustment)
+                await prisma.userExpense.create({
                     data: {
                         userId,
                         expenseId: expense.id,
                         isLender: true,
-                        amountOwed: amount / (splitWith.length + 1),
+                        amountOwed: new Prisma.Decimal(amountPerPerson + adjustment),
                         isSettled: true
                     },
                 });
 
-                // add the expense to the users
-                const expenseUsers = await prisma.userExpense.createMany({
-                    data: map(splitWith, (userId) => {
-                        return {
-                            userId,
-                            expenseId: expense.id,
-                            isLender: false,
-                            amountOwed: amount / (splitWith.length + 1),
-                            isSettled: false
-                        };
-                    }),
+                // Create borrowers' expense records
+                await prisma.userExpense.createMany({
+                    data: splitWith.map((borrowerId) => ({
+                        userId: borrowerId,
+                        expenseId: expense.id,
+                        isLender: false,
+                        amountOwed: new Prisma.Decimal(amountPerPerson),
+                        isSettled: false
+                    })),
                 });
 
-                data = { expense, room, userExpense, expenseUsers };
+                data = { expense, room };
             });
 
             return data;
@@ -280,21 +287,38 @@ class ExpenseService {
                     isSettled: true
                 }
             });
-
-            // await tx.expense.update({
-            //     where: {
-            //         id: expense.id
-            //     },
-            //     data: {
-            //         amount: {
-            //             decrement: amountOwed
-            //         }
-            //     }
-            // })
         })
 
 
-        return {message: 'Expense settled successfully'};
+        return { message: 'Expense settled successfully' };
+    }
+
+    async settleExpense(expenseId: number) {
+        // Check if expense exists
+        const expense = await prisma.expense.findUnique({
+            where: { id: expenseId },
+            include: { users: true }
+        });
+
+        if (!expense) {
+            throw new CustomError('Expense not found', 404);
+        }
+
+        // Check if all users have settled
+        const borrowers = expense.users.filter(user => !user.isLender);
+        const allSettled = borrowers.every(user => user.isSettled);
+
+        if (!allSettled) {
+            throw new CustomError('All users must settle their dues before marking expense as settled', 400);
+        }
+
+        // Update expense status
+        await prisma.expense.update({
+            where: { id: expenseId },
+            data: { isSettled: true }
+        });
+
+        return { message: 'Expense settled successfully' };
     }
 }
 

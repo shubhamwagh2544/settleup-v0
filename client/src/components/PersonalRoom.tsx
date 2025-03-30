@@ -19,8 +19,9 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users } from 'lucide-react';
+import { ArrowLeft, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users, CheckCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { parseMoney, roundMoney, formatMoney } from '@/lib/money';
 
 interface Room {
     id: string;
@@ -53,6 +54,7 @@ export default function PersonalRoom() {
     const [allUsers, setAllUsers] = useState([]);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const navigate = useNavigate();
+    const [isDeleteRoomDialogOpen, setIsDeleteRoomDialogOpen] = useState(false);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const getUserId = () => localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -151,29 +153,33 @@ export default function PersonalRoom() {
     }
 
     async function handleCreateExpense() {
-        console.log('Create expense', { expenseName, expenseDescription, expenseAmount });
         if (isEmpty(expenseName.trim()) || isEmpty(expenseAmount.trim())) {
             toast.error('Expense name and amount are required');
             return;
         }
-        if (isNaN(parseFloat(expenseAmount))) {
-            toast.error('Expense amount must be a number');
+
+        const amount = parseMoney(expenseAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast.error('Please enter a valid amount');
             return;
         }
+
         if (selectedUsers.length === 0) {
             toast.error('Please select at least one user to split with');
             return;
         }
 
         try {
+            const loggedInUserId = Number(getUserId()); // Get the logged-in user's ID
+
             const response = await axios.post(
                 `${BACKEND_URL}/expense`,
                 {
-                    userId: get(room, 'users[0].userId'),
+                    userId: loggedInUserId, // Use logged-in user as lender
                     roomId: roomId ? parseInt(roomId) : null,
                     name: expenseName,
                     description: expenseDescription,
-                    amount: parseFloat(expenseAmount),
+                    amount: roundMoney(amount),
                     splitWith: selectedUsers,
                 },
                 {
@@ -182,10 +188,12 @@ export default function PersonalRoom() {
                     },
                 }
             );
+
             console.log('Expense created', response.data);
             toast.success('Expense created successfully');
             handleDialogClose();
             setSelectedUsers([]);
+
             // Fetch the updated list of expenses
             const updatedExpensesResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
                 headers: {
@@ -193,7 +201,6 @@ export default function PersonalRoom() {
                 },
             });
             setRoom(updatedExpensesResponse.data);
-            // window.location.reload();
         } catch (error: any) {
             console.error('Error creating expense', error);
             toast.error('Error creating expense');
@@ -218,6 +225,29 @@ export default function PersonalRoom() {
                 toast.error(`${error.response.data.message}`);
             } else {
                 toast.error('Error deleting room!');
+            }
+        }
+    }
+
+    async function handleDeleteExpense(expenseId: number) {
+        try {
+            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
+                headers: { Authorization: `Bearer ${getToken()}` }
+            });
+
+            if (response?.data.includes('Delete Successful') && response?.status === 200) {
+                toast.success('Expense deleted successfully');
+                // Refresh room data to update the expenses list
+                const updatedResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
+                setRoom(updatedResponse.data);
+            }
+        } catch (error: AxiosError | any) {
+            if (error.response?.status === 409 || error.response?.status === 404) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('Failed to delete expense');
             }
         }
     }
@@ -250,9 +280,12 @@ export default function PersonalRoom() {
                         </div>
                     </div>
                     {roomUsers.some(user => get(user, 'id') === Number(getUserId()) && get(user, 'isAdmin')) && (
-                        <Button variant="destructive" onClick={handleDeleteRoom} className="bg-red-500 hover:bg-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Room
+                        <Button
+                            variant="destructive"
+                            onClick={() => setIsDeleteRoomDialogOpen(true)}
+                            className="bg-red-500 hover:bg-red-600"
+                        >
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     )}
                 </div>
@@ -329,6 +362,7 @@ export default function PersonalRoom() {
                                     <Button
                                         onClick={createExpenseHandler}
                                         className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                                        disabled={roomUsers.length <= 1}
                                     >
                                         <DollarSign className="h-4 w-4 mr-2" />
                                         Add Expense
@@ -349,7 +383,6 @@ export default function PersonalRoom() {
                                     <div className="space-y-4">
                                         {room?.expenses?.map((expense: any) => {
                                             const lender = expense.users.find((user: any) => user.isLender);
-                                            // const borrowers = expense.users.filter((user: any) => !user.isLender);
 
                                             return (
                                                 <motion.div
@@ -373,8 +406,7 @@ export default function PersonalRoom() {
                                                             </div>
                                                             <div className="flex items-center space-x-2">
                                                                 <Badge variant="outline">
-                                                                    <DollarSign className="h-3 w-3 mr-1" />$
-                                                                    {expense.amount}
+                                                                    ${Number(expense.amount).toFixed(2)}
                                                                 </Badge>
                                                                 <Badge variant="outline">
                                                                     <Users className="h-3 w-3 mr-1" />
@@ -383,11 +415,32 @@ export default function PersonalRoom() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
-                                                                {lender?.fullName?.charAt(0) || 'U'}
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs
+                                                                    ${expense.isSettled
+                                                                        ? 'bg-gradient-to-br from-green-600 to-emerald-600'
+                                                                        : 'bg-gradient-to-br from-purple-600 to-indigo-600'}`}
+                                                                >
+                                                                    {lender?.fullName?.charAt(0) || 'U'}
+                                                                </div>
+                                                                <span>Paid by {lender?.fullName || 'Unknown'}</span>
+                                                                <span>•</span>
+                                                                <span>{new Date(expense.createdAt).toLocaleDateString()}</span>
                                                             </div>
-                                                            <span>Paid by {lender?.fullName || 'Unknown'}</span>
+
+                                                            {/* Status Badge moved to bottom right */}
+                                                            {expense.isSettled ? (
+                                                                <Badge variant="success" className="bg-green-100 text-green-700 border-0 text-xs">
+                                                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                                                    Settled
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-0 text-xs">
+                                                                    <Clock className="h-3 w-3 mr-1" />
+                                                                    Pending
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -461,30 +514,58 @@ export default function PersonalRoom() {
 
                                 <div className="space-y-2">
                                     <Label>Split With</Label>
-                                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                                        {roomUsers
-                                            .filter((user) => get(user, 'id') !== get(room, 'users[0].userId'))
-                                            .map((user) => (
-                                                <div key={get(user, 'id')} className="flex items-center space-x-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id={`user-${get(user, 'id')}`}
-                                                        className="rounded border-muted"
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setSelectedUsers([...selectedUsers, get(user, 'id')]);
-                                                            } else {
-                                                                setSelectedUsers(selectedUsers.filter(id => id !== get(user, 'id')));
-                                                            }
-                                                        }}
-                                                        checked={selectedUsers.includes(get(user, 'id'))}
-                                                    />
-                                                    <UserCircle className="h-4 w-4 text-muted-foreground" />
-                                                    <span>
-                                                        {get(user, 'firstName')} {get(user, 'lastName')}
-                                                    </span>
+                                    <div className="bg-muted/50 rounded-lg p-4">
+                                        {roomUsers.length <= 1 ? (
+                                            // Show message when user is alone in the room
+                                            <div className="flex flex-col items-center justify-center py-4 space-y-3 text-center">
+                                                <Users className="h-12 w-12 text-muted-foreground/50" />
+                                                <div className="space-y-1">
+                                                    <p className="text-sm text-muted-foreground font-medium">No users to split with</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Add members to the room to split expenses with them
+                                                    </p>
                                                 </div>
-                                            ))}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        handleDialogClose();
+                                                        setIsAddUsersDialogOpen(true);
+                                                    }}
+                                                    className="mt-2"
+                                                >
+                                                    <UserPlus className="h-4 w-4 mr-2" />
+                                                    Add Members
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            // Show user selection when there are users to split with
+                                            <div className="space-y-2">
+                                                {roomUsers
+                                                    .filter((user) => get(user, 'id') !== Number(getUserId()))
+                                                    .map((user) => (
+                                                        <div key={get(user, 'id')} className="flex items-center space-x-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                id={`user-${get(user, 'id')}`}
+                                                                className="rounded border-muted"
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedUsers([...selectedUsers, get(user, 'id')]);
+                                                                    } else {
+                                                                        setSelectedUsers(selectedUsers.filter(id => id !== get(user, 'id')));
+                                                                    }
+                                                                }}
+                                                                checked={selectedUsers.includes(get(user, 'id'))}
+                                                            />
+                                                            <UserCircle className="h-4 w-4 text-muted-foreground" />
+                                                            <span>
+                                                                {get(user, 'firstName')} {get(user, 'lastName')}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -499,6 +580,7 @@ export default function PersonalRoom() {
                             <Button
                                 onClick={handleCreateExpense}
                                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                disabled={roomUsers.length <= 1}
                             >
                                 <DollarSign className="h-4 w-4 mr-2" />
                                 Create Expense
@@ -585,6 +667,45 @@ export default function PersonalRoom() {
                                 </div>
                             </DialogFooter>
                         )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Room Confirmation Dialog */}
+            <Dialog open={isDeleteRoomDialogOpen} onOpenChange={setIsDeleteRoomDialogOpen}>
+                <DialogContent className="sm:max-w-[400px] p-0 gap-0">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl text-red-600">Delete Room</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this room? This action cannot be undone.
+                            {room?.expenses?.length > 0 && (
+                                <p className="mt-2 text-red-500">
+                                    Note: All expenses in this room must be settled before deletion.
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsDeleteRoomDialogOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={async () => {
+                                    await handleDeleteRoom();
+                                    setIsDeleteRoomDialogOpen(false);
+                                }}
+                                className="bg-red-500 hover:bg-red-600"
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Room
+                            </Button>
+                        </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

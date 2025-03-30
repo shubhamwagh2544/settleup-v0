@@ -64,7 +64,7 @@ model Expense {
   id          Int      @id @default(autoincrement()) @map("id") @db.Integer
   name        String   @map("name") @db.VarChar(255)
   description String?  @map("description") @db.Text
-  amount      Decimal  @map("amount")
+  amount      Decimal  @map("amount") @db.Decimal(10,2)
   isSettled   Boolean  @default(false) @map("is_settled")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
@@ -85,7 +85,7 @@ model UserExpense {
   expense   Expense @relation(fields: [expenseId], references: [id])
 
   isLender   Boolean  @default(false) @map("is_lender")
-  amountOwed Decimal? @map("amount_owed")
+  amountOwed Decimal @map("amount_owed") @db.Decimal(10,2)
   isSettled  Boolean  @default(false) @map("is_settled")
 
   @@unique([userId, expenseId])
@@ -96,7 +96,7 @@ model Account {
   accountName          String    @map("account_name") @db.VarChar(50)
   accountType          String    @map("account_type") @db.VarChar(50)
   status               String    @default("active") @map("status") @db.VarChar(50)
-  balance              Decimal   @default(0) @map("balance") @db.Decimal(10, 2)
+  balance              Decimal   @default(0) @map("balance") @db.Decimal(10,2)
   lastLoginAt          DateTime? @map("last_login_at") @db.Timestamp(6)
   failedLoginAttempts  Int?      @default(0) @map("failed_login_attempts") @db.Integer
   verificationToken    String?   @map("verification_token") @db.VarChar(255)
