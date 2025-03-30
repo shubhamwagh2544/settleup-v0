@@ -17,11 +17,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowRight, Building, CreditCard, Home, Landmark, Plus, Search, Users2, Wallet } from 'lucide-react';
+import { ArrowRight, Building, CreditCard, Home, Landmark, Plus, Search, Users2, Wallet, HomeIcon, Receipt, CheckCircle, DollarSign } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion } from 'framer-motion';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function MainRoom() {
     const [room, setRoom] = useState("");
@@ -32,6 +32,13 @@ export default function MainRoom() {
     const [accountName, setAccountName] = useState("");
     const [accountType, setAccountType] = useState<AccountType>("saving");
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
+    const [expenseName, setExpenseName] = useState('');
+    const [expenseDescription, setExpenseDescription] = useState('');
+    const [expenseAmount, setExpenseAmount] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+    const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+    const [roomUsers, setRoomUsers] = useState([]);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -56,6 +63,27 @@ export default function MainRoom() {
         }
         fetchUserAccounts().catch(error => console.error("Error fetching user accounts", error));
     }, []);
+
+    useEffect(() => {
+        async function fetchRoomUsers() {
+            if (!selectedRoom) return;
+
+            try {
+                const response = await axios.get(`${BACKEND_URL}/room/${selectedRoom}/users`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+
+                // Filter out the current user since they'll be the lender
+                const filteredUsers = response.data.filter((user: any) => user.id !== Number(userId));
+                setRoomUsers(filteredUsers);
+            } catch (error) {
+                console.error('Error fetching room users:', error);
+                toast.error('Failed to load room users');
+            }
+        }
+
+        fetchRoomUsers();
+    }, [selectedRoom]);
 
     async function createRoomHandler() {
         if (isEmpty(room.trim()) || isNil(room)) {
@@ -120,123 +148,228 @@ export default function MainRoom() {
         get(data, 'room.name', '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    async function handleCreateExpense() {
+        if (!expenseName || !expenseAmount || !selectedRoom) {
+            toast.error('Please fill in all required fields');
+            return;
+        }
+
+        if (selectedUsers.length === 0) {
+            toast.error('Please select users to split the expense with');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${BACKEND_URL}/expense`,
+                {
+                    userId: Number(userId),
+                    roomId: Number(selectedRoom),
+                    name: expenseName,
+                    description: expenseDescription || '',
+                    amount: Number(expenseAmount),
+                    splitWith: selectedUsers
+                },
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+
+            if (response.status === 201) {
+                toast.success('Expense created successfully');
+                setIsCreateExpenseDialogOpen(false);
+
+                // Reset form
+                setExpenseName('');
+                setExpenseDescription('');
+                setExpenseAmount('');
+                setSelectedRoom(null);
+                setSelectedUsers([]);
+
+                // Navigate to the expense details in the selected room
+                navigate(`/room/${selectedRoom}/expenses/${response.data.expense.id}`);
+            }
+        } catch (error: any) {
+            console.error('Error creating expense:', error);
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('Failed to create expense');
+            }
+        }
+    }
+
     return (
         <div className="container mx-auto py-8 px-4">
             <div className="flex flex-col space-y-8">
                 {/* Header Section */}
                 <div className="flex flex-col space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight">Welcome to SettleUp</h1>
-                    <p className="text-muted-foreground">Manage your rooms and accounts</p>
+                    <p className="text-muted-foreground">Manage your rooms, accounts, and expenses</p>
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search rooms..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
+                {/* Main Tabs Section */}
+                <Tabs defaultValue="rooms" className="space-y-6">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="rooms" className="space-x-2">
+                            <HomeIcon className="h-4 w-4" />
+                            <span>Your Rooms</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="accounts" className="space-x-2">
+                            <Wallet className="h-4 w-4" />
+                            <span>Your Accounts</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="expenses" className="space-x-2">
+                            <Receipt className="h-4 w-4" />
+                            <span>Your Expenses</span>
+                        </TabsTrigger>
+                    </TabsList>
 
-                {/* Main Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Rooms List */}
-                    <Card className="col-span-1">
-                        <CardHeader>
-                            <div className="flex items-center space-x-2">
-                                <Home className="h-5 w-5 text-primary" />
-                                <CardTitle>Your Rooms</CardTitle>
-                            </div>
-                            <CardDescription>Manage and join expense rooms</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[300px] pr-4">
-                                {isEmpty(filteredRooms) ? (
-                                    <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
-                                        <Users2 className="h-12 w-12 text-muted-foreground/50" />
-                                        <p className="text-sm text-muted-foreground">No rooms found. Create a new room to get started!</p>
+                    {/* Rooms Tab Content */}
+                    <TabsContent value="rooms" className="space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search rooms..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <HomeIcon className="h-5 w-5 text-primary" />
+                                        <CardTitle>Your Rooms</CardTitle>
                                     </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {filteredRooms.map((data) => (
-                                            <Link
-                                                key={get(data, 'room.id', 'N/A')}
-                                                to={`/room/${get(data, 'room.id', 'N/A')}`}
-                                            >
-                                                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                                                    <span className="font-medium">{get(data, 'room.name', 'N/A')}</span>
-                                                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
-                                )}
-                            </ScrollArea>
-                            <div className="mt-4">
-                                <Button
-                                    onClick={() => setIsRoomDialogOpen(true)}
-                                    variant="outline"
-                                    size="icon"
-                                    className="w-full flex items-center justify-center space-x-2"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span>Create Room</span>
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* User Accounts */}
-                    <Card className="col-span-1">
-                        <CardHeader>
-                            <div className="flex items-center space-x-2">
-                                <Wallet className="h-5 w-5 text-primary" />
-                                <CardTitle>Your Accounts</CardTitle>
-                            </div>
-                            <CardDescription>Manage your payment accounts</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[300px] pr-4">
-                                {isEmpty(userAccounts) ? (
-                                    <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
-                                        <Wallet className="h-12 w-12 text-muted-foreground/50" />
-                                        <p className="text-sm text-muted-foreground">No accounts found. Add your first account!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {userAccounts.map((account) => (
-                                            <Link
-                                                key={get(account, 'id', 'N/A')}
-                                                to={`/account/${get(account, 'id', 'N/A')}`}
-                                            >
-                                                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium">{get(account, 'accountName', 'N/A')}</span>
-                                                        <span className="text-sm text-muted-foreground capitalize">{get(account, 'type', 'N/A')}</span>
+                                    <Button
+                                        onClick={() => setIsRoomDialogOpen(true)}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Room
+                                    </Button>
+                                </div>
+                                <CardDescription>Manage and join expense rooms</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ScrollArea className="h-[400px]">
+                                    {isEmpty(filteredRooms) ? (
+                                        <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
+                                            <Users2 className="h-12 w-12 text-muted-foreground/50" />
+                                            <p className="text-sm text-muted-foreground">No rooms found. Create a new room to get started!</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {filteredRooms.map((data) => (
+                                                <Link
+                                                    key={get(data, 'room.id', 'N/A')}
+                                                    to={`/room/${get(data, 'room.id', 'N/A')}`}
+                                                >
+                                                    <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
+                                                        <span className="font-medium">{get(data, 'room.name', 'N/A')}</span>
+                                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
                                                     </div>
-                                                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                                                </div>
-                                            </Link>
-                                        ))}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Accounts Tab Content */}
+                    <TabsContent value="accounts" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <Wallet className="h-5 w-5 text-primary" />
+                                        <CardTitle>Your Accounts</CardTitle>
                                     </div>
-                                )}
-                            </ScrollArea>
-                            <div className="mt-4">
-                                <Button
-                                    onClick={handleAddAccount}
-                                    variant="outline"
-                                    size="icon"
-                                    className="w-full flex items-center justify-center space-x-2"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span>Add Account</span>
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                                    <Button
+                                        onClick={handleAddAccount}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add Account
+                                    </Button>
+                                </div>
+                                <CardDescription>Manage your payment accounts</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ScrollArea className="h-[400px]">
+                                    {isEmpty(userAccounts) ? (
+                                        <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
+                                            <Wallet className="h-12 w-12 text-muted-foreground/50" />
+                                            <p className="text-sm text-muted-foreground">No accounts found. Add your first account!</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {userAccounts.map((account) => (
+                                                <Link
+                                                    key={get(account, 'id', 'N/A')}
+                                                    to={`/account/${get(account, 'id', 'N/A')}`}
+                                                >
+                                                    <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium">{get(account, 'accountName', 'N/A')}</span>
+                                                            <span className="text-sm text-muted-foreground capitalize">{get(account, 'type', 'N/A')}</span>
+                                                        </div>
+                                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Expenses Tab Content */}
+                    <TabsContent value="expenses" className="space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search expenses..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <Receipt className="h-5 w-5 text-primary" />
+                                        <CardTitle>Your Expenses</CardTitle>
+                                    </div>
+                                    <Button
+                                        onClick={() => setIsCreateExpenseDialogOpen(true)}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Expense
+                                    </Button>
+                                </div>
+                                <CardDescription>View all your expenses across rooms</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ScrollArea className="h-[400px]">
+                                    <div className="space-y-4">
+                                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                                            <Receipt className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                                            <p className="text-muted-foreground">No expenses found</p>
+                                        </div>
+                                    </div>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
 
             {/* Create Room Dialog */}
@@ -395,6 +528,170 @@ export default function MainRoom() {
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Account
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Expense Dialog */}
+            <Dialog open={isCreateExpenseDialogOpen} onOpenChange={setIsCreateExpenseDialogOpen}>
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl">Create New Expense</DialogTitle>
+                        <DialogDescription>Add expense details and select a room</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="px-6 py-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div className="space-y-4">
+                                {/* Expense Name */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseName">Expense Name</Label>
+                                    <div className="relative">
+                                        <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="expenseName"
+                                            placeholder="Enter expense name"
+                                            value={expenseName}
+                                            onChange={(e) => setExpenseName(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseDescription">Description (Optional)</Label>
+                                    <Input
+                                        id="expenseDescription"
+                                        placeholder="Add more details about the expense"
+                                        value={expenseDescription}
+                                        onChange={(e) => setExpenseDescription(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Amount */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="expenseAmount">Amount</Label>
+                                    <div className="relative">
+                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="expenseAmount"
+                                            type="number"
+                                            placeholder="0.00"
+                                            value={expenseAmount}
+                                            onChange={(e) => setExpenseAmount(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Room Selection */}
+                                <div className="space-y-2">
+                                    <Label>Select Room</Label>
+                                    <ScrollArea className="h-[150px] rounded-md border p-4">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {rooms.map((data) => (
+                                                <div
+                                                    key={get(data, 'room.id')}
+                                                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${selectedRoom === get(data, 'room.id')
+                                                        ? 'bg-primary/10 border-primary'
+                                                        : 'hover:bg-accent'
+                                                        }`}
+                                                    onClick={() => setSelectedRoom(get(data, 'room.id'))}
+                                                >
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                                            <HomeIcon className="h-3 w-3 text-primary" />
+                                                        </div>
+                                                        <span className="text-sm font-medium truncate">
+                                                            {get(data, 'room.name')}
+                                                        </span>
+                                                    </div>
+                                                    {selectedRoom === get(data, 'room.id') && (
+                                                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+
+                                {/* User Selection - Only show when a room is selected */}
+                                {selectedRoom && (
+                                    <div className="space-y-2">
+                                        <Label>Split With</Label>
+                                        {roomUsers.length === 0 ? (
+                                            <div className="rounded-md border p-3 text-center text-muted-foreground">
+                                                <Users2 className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                                                <p className="text-sm">No users available</p>
+                                            </div>
+                                        ) : (
+                                            <ScrollArea className="h-[150px] rounded-md border p-4">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {roomUsers.map((user: any) => (
+                                                        <div
+                                                            key={user.id}
+                                                            className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${selectedUsers.includes(user.id)
+                                                                ? 'bg-primary/10 border-primary'
+                                                                : 'hover:bg-accent'
+                                                                }`}
+                                                            onClick={() => {
+                                                                setSelectedUsers(prev =>
+                                                                    prev.includes(user.id)
+                                                                        ? prev.filter(id => id !== user.id)
+                                                                        : [...prev, user.id]
+                                                                );
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center space-x-2">
+                                                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
+                                                                    {user.firstName.charAt(0)}
+                                                                </div>
+                                                                <span className="text-sm font-medium truncate">
+                                                                    {user.firstName} {user.lastName}
+                                                                </span>
+                                                            </div>
+                                                            {selectedUsers.includes(user.id) && (
+                                                                <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setIsCreateExpenseDialogOpen(false);
+                                    setExpenseName('');
+                                    setExpenseDescription('');
+                                    setExpenseAmount('');
+                                    setSelectedRoom(null);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleCreateExpense}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                disabled={!expenseName || !expenseAmount || !selectedRoom}
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Expense
                             </Button>
                         </div>
                     </DialogFooter>
