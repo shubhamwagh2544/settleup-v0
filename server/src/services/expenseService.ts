@@ -264,18 +264,32 @@ class ExpenseService {
         }
 
         // Update the userExpense
-        await prisma.userExpense.update({
-            where: {
-                userId_expenseId: {
-                    userId,
-                    expenseId
+        await prisma.$transaction(async (tx) => {
+            await tx.userExpense.update({
+                where: {
+                    userId_expenseId: {
+                        userId,
+                        expenseId
+                    }
+                },
+                data: {
+                    amountOwed: 0,
+                    isSettled: true
                 }
-            },
-            data: {
-                amountOwed: 0,
-                isSettled: true
-            }
-        });
+            });
+
+            await tx.expense.update({
+                where: {
+                    id: expense.id
+                },
+                data: {
+                    amount: {
+                        decrement: amountOwed
+                    }
+                }
+            })
+        })
+
 
         return {message: 'Expense settled successfully'};
     }

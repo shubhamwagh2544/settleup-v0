@@ -232,7 +232,7 @@ export default function PersonalExpense() {
                                                 </div>
                                                 <div className="flex items-center space-x-4">
                                                     <Badge variant={borrower.isSettled ? 'success' : 'destructive'}>
-                                                        ${borrower.amountOwed}
+                                                        ${Number(borrower.amountOwed).toFixed(2)}
                                                     </Badge>
                                                     {!borrower.isSettled && borrower.userId === Number(userId) && (
                                                         <Button

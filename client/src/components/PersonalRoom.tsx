@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config';
 import { get, isEmpty, isNil } from 'lodash';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -186,6 +186,8 @@ export default function PersonalRoom() {
             toast.success('Expense created successfully');
             handleDialogClose();
             setSelectedUsers([]);
+            // Todo : newly created expense shall be listed in expenses list
+            // window.location.reload();
         } catch (error: any) {
             console.error('Error creating expense', error);
             toast.error('Error creating expense');
@@ -294,7 +296,7 @@ export default function PersonalRoom() {
                                                     {get(user, 'isAdmin') && (
                                                         <Badge
                                                             variant="secondary"
-                                                            className="bg-gradient-to-r from-purple-600/10 to-indigo-600/10 text-primary border-0 
+                                                            className="bg-gradient-to-r from-purple-600/10 to-indigo-600/10 text-primary border-0
                                                             px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase"
                                                         >
                                                             Admin
