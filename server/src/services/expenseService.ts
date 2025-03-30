@@ -82,6 +82,8 @@ class ExpenseService {
                         userId,
                         expenseId: expense.id,
                         isLender: true,
+                        amountOwed: amount / (splitWith.length + 1),
+                        isSettled: true
                     },
                 });
 
@@ -93,6 +95,7 @@ class ExpenseService {
                             expenseId: expense.id,
                             isLender: false,
                             amountOwed: amount / (splitWith.length + 1),
+                            isSettled: false
                         };
                     }),
                 });
@@ -278,16 +281,16 @@ class ExpenseService {
                 }
             });
 
-            await tx.expense.update({
-                where: {
-                    id: expense.id
-                },
-                data: {
-                    amount: {
-                        decrement: amountOwed
-                    }
-                }
-            })
+            // await tx.expense.update({
+            //     where: {
+            //         id: expense.id
+            //     },
+            //     data: {
+            //         amount: {
+            //             decrement: amountOwed
+            //         }
+            //     }
+            // })
         })
 
 

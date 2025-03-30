@@ -186,7 +186,13 @@ export default function PersonalRoom() {
             toast.success('Expense created successfully');
             handleDialogClose();
             setSelectedUsers([]);
-            // Todo : newly created expense shall be listed in expenses list
+            // Fetch the updated list of expenses
+            const updatedExpensesResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                },
+            });
+            setRoom(updatedExpensesResponse.data);
             // window.location.reload();
         } catch (error: any) {
             console.error('Error creating expense', error);
