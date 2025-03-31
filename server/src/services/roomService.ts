@@ -97,13 +97,72 @@ class RoomService {
         if (isNil(user)) {
             throw new CustomError('User not found', 404);
         }
-        return prisma.userRoom.findMany({
+        const userRooms = await prisma.userRoom.findMany({
             where: {
                 userId,
             },
             include: {
-                room: true,
-            },
+                room: {
+                    include: {
+                        users: {
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        firstName: true,
+                                        lastName: true,
+                                        email: true
+                                    }
+                                }
+                            }
+                        },
+                        expenses: {
+                            include: {
+                                users: {
+                                    include: {
+                                        user: {
+                                            select: {
+                                                id: true,
+                                                firstName: true,
+                                                lastName: true,
+                                                email: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Transform the response to include full names and clean up the structure
+        return userRooms.map(userRoom => {
+            const room = userRoom.room;
+            const transformedRoom = {
+                ...room,
+                users: room.users.map(ur => ({
+                    ...ur.user,
+                    isAdmin: ur.isAdmin,
+                    fullName: `${ur.user.firstName} ${ur.user.lastName}`
+                })),
+                expenses: room.expenses.map(expense => ({
+                    ...expense,
+                    users: expense.users.map(eu => ({
+                        ...eu.user,
+                        isLender: eu.isLender,
+                        amountOwed: eu.amountOwed,
+                        isSettled: eu.isSettled,
+                        fullName: `${eu.user.firstName} ${eu.user.lastName}`
+                    }))
+                }))
+            };
+
+            return {
+                ...userRoom,
+                room: transformedRoom
+            };
         });
     }
 

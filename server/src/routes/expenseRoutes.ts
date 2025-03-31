@@ -28,6 +28,7 @@ class ExpenseRoutes {
         this.expenseRouter.get('/room/:roomId/expense/:expenseId', authMiddleware, expenseController.getExpenseById);
         this.expenseRouter.put('/room/:roomId/expense/:expenseId', authMiddleware, expenseController.updateExpense);
         this.expenseRouter.put('/:expenseId/settle', authMiddleware, expenseController.settleExpense);
+        this.expenseRouter.get('/user/:userId', authMiddleware, expenseController.getExpensesForUser);
     }
 
     public getRouter() {

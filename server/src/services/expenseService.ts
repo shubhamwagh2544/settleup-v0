@@ -1,6 +1,6 @@
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
-import { isEmpty, isNil, map } from 'lodash';
+import { isEmpty, isNil } from 'lodash';
 import { Prisma } from '@prisma/client';
 import { roundMoney } from '../lib/money';
 
@@ -252,7 +252,7 @@ class ExpenseService {
         };
     }
 
-    async updateExpense(roomId: number, expenseId: number, userId: number, amount: number) {
+    async updateExpense(roomId: number, expenseId: number, userId: number, amount: number, accountId: number) {
         // check if expense exists for roomId, expenseId and userId
         const expense = await this.getExpenseById(roomId, expenseId);
         if (!expense) {
@@ -273,8 +273,39 @@ class ExpenseService {
             throw new CustomError('Amount does not match amount owed by user', 409);
         }
 
-        // Update the userExpense
+        // Get user's account
+        const account = await prisma.account.findUnique({
+            where: {
+                id: accountId,
+                userId: userId,
+                status: 'active'
+            }
+        });
+
+        if (!account) {
+            throw new CustomError('Account not found or inactive', 404);
+        }
+
+        // Check if user has sufficient balance
+        if (Number(account.balance) < amount) {
+            throw new CustomError('Insufficient balance in account', 400);
+        }
+
+        // Update the userExpense and account balance in a transaction
         await prisma.$transaction(async (tx) => {
+            // Deduct amount from user's account
+            await tx.account.update({
+                where: {
+                    id: accountId
+                },
+                data: {
+                    balance: {
+                        decrement: amount
+                    }
+                }
+            });
+
+            // Update the userExpense
             await tx.userExpense.update({
                 where: {
                     userId_expenseId: {
@@ -287,8 +318,22 @@ class ExpenseService {
                     isSettled: true
                 }
             });
-        })
 
+            // Log the transaction
+            await tx.transaction.create({
+                data: {
+                    amount,
+                    type: 'EXPENSE_SETTLEMENT',
+                    description: `Settlement for expense: ${expense.name}`,
+                    status: 'COMPLETED',
+                    senderId: userId,
+                    receiverId: expense.users.find(u => u.isLender)?.userId || userId,
+                    senderAccountId: accountId,
+                    receiverAccountId: null, // Lender's account will be updated separately
+                    createdAt: new Date()
+                }
+            });
+        });
 
         return { message: 'Expense settled successfully' };
     }
@@ -319,6 +364,28 @@ class ExpenseService {
         });
 
         return { message: 'Expense settled successfully' };
+    }
+
+    async getExpensesForUser(userId: number) {
+        if (isNil(userId)) {
+            throw new CustomError('Invalid UserId', 400);
+        }
+
+        const userExpenses = await prisma.userExpense.findMany({
+            where: {
+                userId,
+            },
+            include: {
+                expense: true,
+                user: true
+            }
+        });
+
+        if (isNil(userExpenses)) {
+            throw new CustomError('User Expenses not found', 404);
+        }
+
+        return userExpenses;
     }
 }
 

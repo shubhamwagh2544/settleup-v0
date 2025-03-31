@@ -24,8 +24,9 @@ class AccountRoutes {
     private initializeRoutes(): void {
         this.accountRouter.post('/user', authMiddleware, accountController.createAccount);
         this.accountRouter.get('/user/:userId', authMiddleware, accountController.getAccountsForUser);
-        this.accountRouter.get('/:accountId/user/:userId', authMiddleware, accountController.getAccountByAccountId)
-        this.accountRouter.post('/:accountId/user/:userId/deposit', authMiddleware, accountController.addMoneyToAccount)
+        this.accountRouter.get('/:accountId/user/:userId', authMiddleware, accountController.getAccountByAccountId);
+        this.accountRouter.post('/:accountId/user/:userId/deposit', authMiddleware, accountController.addMoneyToAccount);
+        this.accountRouter.get('/:accountId/transactions', authMiddleware, accountController.getAccountTransactions);
     }
 
     public getRouter(): Router {

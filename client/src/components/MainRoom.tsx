@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Button } from './ui/button';
 import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,21 +17,38 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowRight, Building, CreditCard, Home, Landmark, Plus, Search, Users2, Wallet, HomeIcon, Receipt, CheckCircle, DollarSign } from 'lucide-react';
+import {
+    Building,
+    CheckCircle,
+    CreditCard,
+    DollarSign,
+    Home,
+    HomeIcon,
+    Landmark,
+    Plus,
+    Receipt,
+    Search,
+    Users2,
+    Wallet,
+} from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion } from 'framer-motion';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 export default function MainRoom() {
     const [room, setRoom] = useState("");
     const [rooms, setRooms] = useState([]);
     const [userAccounts, setUserAccounts] = useState<Account[]>([]);
+    const [userExpenses, setUserExpenses] = useState([]);
     const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
     const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
     const [accountName, setAccountName] = useState("");
     const [accountType, setAccountType] = useState<AccountType>("saving");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [roomSearchQuery, setRoomSearchQuery] = useState("");
+    const [accountSearchQuery, setAccountSearchQuery] = useState("");
+    const [expenseSearchQuery, setExpenseSearchQuery] = useState("");
     const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
     const [expenseDescription, setExpenseDescription] = useState('');
@@ -62,6 +79,19 @@ export default function MainRoom() {
             setUserAccounts(response.data);
         }
         fetchUserAccounts().catch(error => console.error("Error fetching user accounts", error));
+
+        async function fetchUserExpenses() {
+            try {
+                const response = await axios.get(`${BACKEND_URL}/expense/user/${userId}`, {
+                    headers: { "Authorization": `Bearer ${getToken()}` }
+                });
+                setUserExpenses(response.data);
+            } catch (error) {
+                console.error("Error fetching user expenses", error);
+                toast.error("Failed to load expenses");
+            }
+        }
+        fetchUserExpenses();
     }, []);
 
     useEffect(() => {
@@ -137,6 +167,7 @@ export default function MainRoom() {
                 setIsAccountDialogOpen(false);
                 setAccountName('');
                 setAccountType('saving');
+                navigate(`/account/${response.data.id}`);
             }
         } catch (error) {
             toast.error('Error creating account');
@@ -145,7 +176,17 @@ export default function MainRoom() {
     }
 
     const filteredRooms = rooms.filter((data) =>
-        get(data, 'room.name', '').toLowerCase().includes(searchQuery.toLowerCase())
+        get(data, 'room.name', '').toLowerCase().includes(roomSearchQuery.toLowerCase())
+    );
+
+    const filteredAccounts = userAccounts.filter((account) =>
+        account.accountName.toLowerCase().includes(accountSearchQuery.toLowerCase()) ||
+        account.accountType.toLowerCase().includes(accountSearchQuery.toLowerCase())
+    );
+
+    const filteredExpenses = userExpenses.filter((expense: any) =>
+        expense.expense.name.toLowerCase().includes(expenseSearchQuery.toLowerCase()) ||
+        expense.expense.description?.toLowerCase().includes(expenseSearchQuery.toLowerCase())
     );
 
     async function handleCreateExpense() {
@@ -231,8 +272,8 @@ export default function MainRoom() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search rooms..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                value={roomSearchQuery}
+                                onChange={(e) => setRoomSearchQuery(e.target.value)}
                                 className="pl-9"
                             />
                         </div>
@@ -256,22 +297,54 @@ export default function MainRoom() {
                             <CardContent>
                                 <ScrollArea className="h-[400px]">
                                     {isEmpty(filteredRooms) ? (
-                                        <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
-                                            <Users2 className="h-12 w-12 text-muted-foreground/50" />
-                                            <p className="text-sm text-muted-foreground">No rooms found. Create a new room to get started!</p>
+                                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                                            <Users2 className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                                            <p className="text-muted-foreground">No rooms found. Create a new room to get started!</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
+                                        <div className="space-y-4">
                                             {filteredRooms.map((data) => (
-                                                <Link
+                                                <motion.div
                                                     key={get(data, 'room.id', 'N/A')}
-                                                    to={`/room/${get(data, 'room.id', 'N/A')}`}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="group cursor-pointer"
+                                                    onClick={() => navigate(`/room/${get(data, 'room.id', 'N/A')}`)}
                                                 >
-                                                    <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                                                        <span className="font-medium">{get(data, 'room.name', 'N/A')}</span>
-                                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                                    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="space-y-1">
+                                                                <h3 className="font-medium group-hover:text-primary transition-colors">
+                                                                    {get(data, 'room.name', 'N/A')}
+                                                                </h3>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Badge variant="outline">
+                                                                        <Users2 className="h-3 w-3 mr-1" />
+                                                                        {get(data, 'room.users', []).length} members
+                                                                    </Badge>
+                                                                    <Badge variant="outline">
+                                                                        <Receipt className="h-3 w-3 mr-1" />
+                                                                        {get(data, 'room.expenses', []).length} expenses
+                                                                    </Badge>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Badge variant={get(data, 'isAdmin', false) ? "default" : "secondary"}>
+                                                                    {get(data, 'isAdmin', false) ? "Admin" : "Member"}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
+                                                                {get(data, 'room.name', 'N/A').charAt(0)}
+                                                            </div>
+                                                            <span>Created {new Date(get(data, 'room.createdAt', '')).toLocaleDateString()}</span>
+                                                            <span>•</span>
+                                                            <span>Last updated {new Date(get(data, 'room.updatedAt', '')).toLocaleDateString()}</span>
+                                                        </div>
                                                     </div>
-                                                </Link>
+                                                </motion.div>
                                             ))}
                                         </div>
                                     )}
@@ -282,6 +355,15 @@ export default function MainRoom() {
 
                     {/* Accounts Tab Content */}
                     <TabsContent value="accounts" className="space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search accounts..."
+                                value={accountSearchQuery}
+                                onChange={(e) => setAccountSearchQuery(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
@@ -301,26 +383,57 @@ export default function MainRoom() {
                             </CardHeader>
                             <CardContent>
                                 <ScrollArea className="h-[400px]">
-                                    {isEmpty(userAccounts) ? (
+                                    {isEmpty(filteredAccounts) ? (
                                         <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
                                             <Wallet className="h-12 w-12 text-muted-foreground/50" />
-                                            <p className="text-sm text-muted-foreground">No accounts found. Add your first account!</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {accountSearchQuery ? "No accounts found matching your search" : "No accounts found. Add your first account!"}
+                                            </p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
-                                            {userAccounts.map((account) => (
-                                                <Link
+                                        <div className="space-y-4">
+                                            {filteredAccounts.map((account) => (
+                                                <motion.div
                                                     key={get(account, 'id', 'N/A')}
-                                                    to={`/account/${get(account, 'id', 'N/A')}`}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="group cursor-pointer"
+                                                    onClick={() => navigate(`/account/${get(account, 'id', 'N/A')}`)}
                                                 >
-                                                    <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">{get(account, 'accountName', 'N/A')}</span>
-                                                            <span className="text-sm text-muted-foreground capitalize">{get(account, 'type', 'N/A')}</span>
+                                                    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="space-y-1">
+                                                                <h3 className="font-medium group-hover:text-primary transition-colors">
+                                                                    {get(account, 'accountName', 'N/A')}
+                                                                </h3>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Badge variant="outline" className="capitalize">
+                                                                        <Building className="h-3 w-3 mr-1" />
+                                                                        {get(account, 'accountType', 'N/A')}
+                                                                    </Badge>
+                                                                    <Badge variant={account.status === 'active' ? 'success' : 'destructive'}>
+                                                                        {account.status === 'active' ? 'Active' : 'Inactive'}
+                                                                    </Badge>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Badge variant="outline" className="text-lg font-semibold">
+                                                                    <DollarSign className="h-4 w-4 mr-1" />
+                                                                    ${Number(account.balance).toFixed(2)}
+                                                                </Badge>
+                                                            </div>
                                                         </div>
-                                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+
+                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
+                                                                <Wallet className="h-3 w-3" />
+                                                            </div>
+                                                            <span>Created {new Date(account.createdAt).toLocaleDateString()}</span>
+                                                            <span>•</span>
+                                                            <span>Last updated {new Date(account.updatedAt).toLocaleDateString()}</span>
+                                                        </div>
                                                     </div>
-                                                </Link>
+                                                </motion.div>
                                             ))}
                                         </div>
                                     )}
@@ -334,9 +447,9 @@ export default function MainRoom() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search expenses..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search expenses by name or description..."
+                                value={expenseSearchQuery}
+                                onChange={(e) => setExpenseSearchQuery(e.target.value)}
                                 className="pl-9"
                             />
                         </div>
@@ -359,12 +472,59 @@ export default function MainRoom() {
                             </CardHeader>
                             <CardContent>
                                 <ScrollArea className="h-[400px]">
-                                    <div className="space-y-4">
+                                    {isEmpty(filteredExpenses) ? (
                                         <div className="flex flex-col items-center justify-center py-8 text-center">
                                             <Receipt className="h-12 w-12 text-muted-foreground/50 mb-2" />
-                                            <p className="text-muted-foreground">No expenses found</p>
+                                            <p className="text-muted-foreground">
+                                                {expenseSearchQuery ? "No expenses found matching your search" : "No expenses found"}
+                                            </p>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {filteredExpenses.map((expense: any) => (
+                                                <motion.div
+                                                    key={expense.expenseId}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="group cursor-pointer"
+                                                    onClick={() => navigate(`/room/${expense.expense.roomId}/expenses/${expense.expenseId}`)}
+                                                >
+                                                    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="space-y-1">
+                                                                <h3 className="font-medium group-hover:text-primary transition-colors">
+                                                                    {expense.expense.name}
+                                                                </h3>
+                                                                {expense.expense.description && (
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {expense.expense.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Badge variant="outline">
+                                                                    <DollarSign className="h-3 w-3 mr-1" />
+                                                                    ${Number(expense.amountOwed).toFixed(2)}
+                                                                </Badge>
+                                                                <Badge variant={expense.isSettled ? "success" : "destructive"}>
+                                                                    {expense.isSettled ? "Settled" : "Pending"}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
+                                                                {expense.user.firstName.charAt(0)}
+                                                            </div>
+                                                            <span>Paid by {expense.user.firstName} {expense.user.lastName}</span>
+                                                            <span>•</span>
+                                                            <span>{new Date(expense.expense.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </ScrollArea>
                             </CardContent>
                         </Card>

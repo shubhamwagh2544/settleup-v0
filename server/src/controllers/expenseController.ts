@@ -61,13 +61,18 @@ class ExpenseController {
     async updateExpense(req: Request, res: Response) {
         try {
             const { roomId, expenseId } = req.params;
-            const { userId, amount } = req.body;
-            const expense = await expenseService.updateExpense(Number(roomId), Number(expenseId), Number(userId), Number(amount));
+            const { userId, amount, accountId } = req.body;
+            const expense = await expenseService.updateExpense(
+                Number(roomId),
+                Number(expenseId),
+                Number(userId),
+                Number(amount),
+                Number(accountId)
+            );
             return res.status(200).json(expense);
         } catch (error) {
             return errorHandler(error, req, res);
         }
-
     }
 
     async settleExpense(req: Request, res: Response) {
@@ -75,6 +80,16 @@ class ExpenseController {
             const { expenseId } = req.params;
             const success = await expenseService.settleExpense(Number(expenseId));
             return res.status(200).json(success);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getExpensesForUser(req: Request, res: Response) {
+        try {
+            const { userId } = req.params;
+            const expenses = await expenseService.getExpensesForUser(Number(userId));
+            return res.status(200).json(expenses);
         } catch (error) {
             return errorHandler(error, req, res);
         }

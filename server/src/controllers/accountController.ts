@@ -1,4 +1,4 @@
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 import { isNil } from 'lodash';
 import { userIdSchema } from '../validations/userValidations';
 import errorHandler from '../middlewares/errorHandler';
@@ -17,7 +17,7 @@ declare global {
 class AccountController {
     private static instance: AccountController;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): AccountController {
         if (isNil(AccountController.instance)) {
@@ -33,7 +33,7 @@ class AccountController {
                 return res.status(422).json(userIdValidator.error.format());
             }
             const { id: userId } = userIdValidator.data;
-            const {name: accountName, type: accountType} = req.body;
+            const { name: accountName, type: accountType } = req.body;
             const account = await accountService.createAccount(accountName, accountType, userId);
             return res.status(200).json(account);
         } catch (error) {
@@ -43,7 +43,7 @@ class AccountController {
 
     async getAccountsForUser(req: Request, res: Response) {
         try {
-            const {userId} = req.params;
+            const { userId } = req.params;
             const accounts = await accountService.getAccountsForUser(parseInt(userId));
             return res.status(200).json(accounts);
         } catch (error) {
@@ -53,7 +53,7 @@ class AccountController {
 
     async getAccountByAccountId(req: Request, res: Response) {
         try {
-            const {userId, accountId} = req.params;
+            const { userId, accountId } = req.params;
             const account = await accountService.getAccountByAccountId(parseInt(userId), parseInt(accountId));
             return res.status(200).json(account);
         } catch (error) {
@@ -63,10 +63,20 @@ class AccountController {
 
     async addMoneyToAccount(req: Request, res: Response) {
         try {
-            const {userId, accountId} = req.params;
-            const {amount} = req.body;
+            const { userId, accountId } = req.params;
+            const { amount } = req.body;
             const account = await accountService.addMoneyToAccount(parseInt(userId), parseInt(accountId), amount);
             return res.status(200).json(account);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async getAccountTransactions(req: Request, res: Response) {
+        try {
+            const { accountId } = req.params;
+            const transactions = await accountService.getAccountTransactions(parseInt(accountId));
+            return res.status(200).json(transactions);
         } catch (error) {
             return errorHandler(error, req, res);
         }

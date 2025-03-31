@@ -7,7 +7,7 @@ const prisma = DbConfig.getInstance();
 class AccountService {
     private static instance: AccountService;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): AccountService {
         if (isNil(AccountService.instance)) {
@@ -85,7 +85,7 @@ class AccountService {
             let updatedAccount;
             let transactionStatus: 'COMPLETED' | 'FAILED' = 'COMPLETED';
             try {
-                 updatedAccount = await tx.account.update({
+                updatedAccount = await tx.account.update({
                     where: {
                         id: accountId
                     },
@@ -135,6 +135,37 @@ class AccountService {
 
             return { balance: Number(updatedAccount.balance) };
         }, { timeout: 30000 })
+    }
+
+    async getAccountTransactions(accountId: number) {
+        if (isNil(accountId)) {
+            throw new CustomError('Invalid AccountId', 400);
+        }
+
+        // Check if account exists
+        const account = await prisma.account.findUnique({
+            where: {
+                id: accountId,
+                status: 'active'
+            }
+        });
+
+        if (!account) {
+            throw new CustomError('Account not found or inactive', 404);
+        }
+
+        // Get all transactions for this account
+        return prisma.transaction.findMany({
+            where: {
+                OR: [
+                    { senderAccountId: accountId },
+                    { receiverAccountId: accountId }
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
     }
 }
 

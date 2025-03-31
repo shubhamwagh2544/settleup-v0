@@ -2,42 +2,53 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config';
-import { get, isNil } from 'lodash';
+import { isEmpty, isNil } from 'lodash';
 import { Account } from '@/types/Account';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
-    ArrowLeft,
-    Wallet,
-    PlusCircle,
-    SendHorizontal,
-    ClockIcon,
-    CreditCard,
-    CheckCircle2,
-    XCircle,
-    DollarSign,
-    ArrowUpRight,
     ArrowDownRight,
+    ArrowLeft,
+    ArrowUpRight,
+    Building,
+    CalendarDays,
+    CheckCircle2,
+    CreditCard,
+    DollarSign,
     History,
-    UserCircle,
-    Users,
-    CalendarDays
+    PlusCircle,
+    Receipt,
+    SendHorizontal,
+    Wallet,
+    XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface Transaction {
     id: number;
-    type: 'deposit' | 'withdrawal' | 'transfer';
+    type: 'DEPOSIT' | 'WITHDRAWAL' | 'EXPENSE_SETTLEMENT';
     amount: number;
-    date: string;
-    description?: string;
+    description: string;
+    status: 'COMPLETED' | 'FAILED';
+    createdAt: string;
+    senderId: number;
+    receiverId: number;
+    senderAccountId: number;
+    receiverAccountId: number | null;
 }
 
 export default function PersonalAccount() {
@@ -49,12 +60,7 @@ export default function PersonalAccount() {
     const [isSendMoneyDialogOpen, setIsSendMoneyDialogOpen] = useState(false);
     const [amount, setAmount] = useState('');
     const [recipientEmail, setRecipientEmail] = useState('');
-    const [transactions, setTransactions] = useState<Transaction[]>([
-        // Dummy transactions for UI demonstration
-        { id: 1, type: 'deposit', amount: 500, date: '2024-03-15', description: 'Salary deposit' },
-        { id: 2, type: 'withdrawal', amount: 50, date: '2024-03-14', description: 'Grocery shopping' },
-        { id: 3, type: 'transfer', amount: 100, date: '2024-03-13', description: 'Rent payment' },
-    ]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -73,8 +79,27 @@ export default function PersonalAccount() {
                 setLoading(false);
             }
         }
+
         fetchAccount();
-    }, [accountId]);
+    }, [accountId, userId]);
+
+    useEffect(() => {
+        async function fetchTransactions() {
+            try {
+                const response = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                setTransactions(response.data);
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                toast.error('Failed to load transactions');
+            }
+        }
+
+        if (accountId) {
+            fetchTransactions();
+        }
+    }, [accountId, userId]);
 
     async function handleDeposit() {
         const depositAmount = parseFloat(amount);
@@ -96,16 +121,14 @@ export default function PersonalAccount() {
                 setIsAddMoneyDialogOpen(false);
                 setAmount('');
 
+                // Update account balance
                 setAccount((prev) => prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev);
 
-                // Add to transactions
-                setTransactions(prev => [{
-                    id: Date.now(),
-                    type: 'deposit',
-                    amount: depositAmount,
-                    date: new Date().toISOString().split('T')[0],
-                    description: 'Added money'
-                }, ...prev]);
+                // Refresh transactions
+                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                setTransactions(transactionsResponse.data);
             }
         } catch (error: AxiosError | any) {
             const errorMessage = error.response?.data?.message || 'Failed to add money';
@@ -126,20 +149,35 @@ export default function PersonalAccount() {
             return;
         }
 
-        // TODO: Implement actual send money functionality
-        toast.success('Money sent successfully');
-        setIsSendMoneyDialogOpen(false);
-        setAmount('');
-        setRecipientEmail('');
+        try {
+            const response = await axios.post(
+                `${BACKEND_URL}/account/${accountId}/transfer`,
+                {
+                    amount: sendAmount,
+                    recipientEmail: recipientEmail
+                },
+                { headers: { Authorization: `Bearer ${getToken()}` } }
+            );
 
-        // Add to transactions
-        setTransactions(prev => [{
-            id: Date.now(),
-            type: 'transfer',
-            amount: sendAmount,
-            date: new Date().toISOString().split('T')[0],
-            description: `Sent to ${recipientEmail}`
-        }, ...prev]);
+            if (response.status === 200) {
+                toast.success('Money sent successfully');
+                setIsSendMoneyDialogOpen(false);
+                setAmount('');
+                setRecipientEmail('');
+
+                // Update account balance
+                setAccount((prev) => prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev);
+
+                // Refresh transactions
+                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                setTransactions(transactionsResponse.data);
+            }
+        } catch (error: AxiosError | any) {
+            const errorMessage = error.response?.data?.message || 'Failed to send money';
+            toast.error(errorMessage);
+        }
     }
 
     if (loading) {
@@ -186,7 +224,7 @@ export default function PersonalAccount() {
                                 {account.accountName}
                             </h1>
                             <p className="text-muted-foreground">
-                                Manage your personal account
+                                Manage your {account.accountType.toLowerCase()} account
                             </p>
                         </div>
                     </div>
@@ -232,8 +270,26 @@ export default function PersonalAccount() {
                                 <div className="flex justify-between items-center">
                                     <p className="text-sm text-muted-foreground">Account Type</p>
                                     <Badge variant="outline" className="capitalize">
-                                        <CreditCard className="h-3 w-3 mr-1" />
+                                        {account.accountType === 'saving' ? (
+                                            <Building className="h-3 w-3 mr-1" />
+                                        ) : (
+                                            <CreditCard className="h-3 w-3 mr-1" />
+                                        )}
                                         {account.accountType}
+                                    </Badge>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <p className="text-sm text-muted-foreground">Created On</p>
+                                    <Badge variant="outline">
+                                        {new Date(account.createdAt).toLocaleDateString()}
+                                    </Badge>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <p className="text-sm text-muted-foreground">Last Updated</p>
+                                    <Badge variant="outline">
+                                        {new Date(account.updatedAt).toLocaleDateString()}
                                     </Badge>
                                 </div>
                             </div>
@@ -263,59 +319,64 @@ export default function PersonalAccount() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                     <History className="h-5 w-5 text-primary" />
-                                    <CardTitle>Expenses</CardTitle>
+                                    <CardTitle>Transaction History</CardTitle>
                                 </div>
                             </div>
-                            <CardDescription>Your recent expenses</CardDescription>
+                            <CardDescription>Your recent account transactions</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ScrollArea className="h-[400px] pr-4">
-                                <div className="space-y-4">
-                                    {account?.expenses?.map((expense) => (
-                                        <motion.div
-                                            key={expense.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="group cursor-pointer"
-                                            onClick={() => navigate(`/expense/${expense.id}`)}
-                                        >
-                                            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/20 hover:shadow-md transition-all duration-200">
-                                                <div className="flex items-center space-x-4">
-                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${expense.type === 'personal'
-                                                        ? 'bg-purple-100 text-purple-600'
-                                                        : 'bg-blue-100 text-blue-600'
-                                                        }`}>
-                                                        {expense.type === 'personal' ? (
-                                                            <UserCircle className="h-5 w-5" />
-                                                        ) : (
-                                                            <Users className="h-5 w-5" />
-                                                        )}
+                            <ScrollArea className="h-[400px]">
+                                {isEmpty(transactions) ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                                        <History className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                                        <p className="text-muted-foreground">No transactions found</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {transactions.map((transaction) => (
+                                            <motion.div
+                                                key={transaction.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                            >
+                                                <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="space-y-1">
+                                                            <h3 className="font-medium">
+                                                                {transaction.description}
+                                                            </h3>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Badge variant="outline">
+                                                                    {transaction.type === 'DEPOSIT' ? (
+                                                                        <ArrowDownRight className="h-3 w-3 mr-1 text-green-500" />
+                                                                    ) : transaction.type === 'WITHDRAWAL' ? (
+                                                                        <ArrowUpRight className="h-3 w-3 mr-1 text-red-500" />
+                                                                    ) : (
+                                                                        <Receipt className="h-3 w-3 mr-1 text-purple-500" />
+                                                                    )}
+                                                                    {transaction.type}
+                                                                </Badge>
+                                                                <Badge variant={transaction.status === 'COMPLETED' ? 'success' : 'destructive'}>
+                                                                    {transaction.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                        <Badge
+                                                            variant={transaction.type === 'DEPOSIT' ? 'success' : 'destructive'}
+                                                            className="text-lg"
+                                                        >
+                                                            {transaction.type === 'DEPOSIT' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
+                                                        </Badge>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-medium group-hover:text-primary transition-colors">
-                                                            {expense.name}
-                                                        </p>
-                                                        {expense.description && (
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {expense.description}
-                                                            </p>
-                                                        )}
+                                                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                        <CalendarDays className="h-4 w-4" />
+                                                        <span>{new Date(transaction.createdAt).toLocaleString()}</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center space-x-4">
-                                                    <Badge variant="outline">
-                                                        <DollarSign className="h-3 w-3 mr-1" />
-                                                        ${expense.amount.toFixed(2)}
-                                                    </Badge>
-                                                    <Badge variant="outline">
-                                                        <CalendarDays className="h-3 w-3 mr-1" />
-                                                        {new Date(expense.date).toLocaleDateString()}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                )}
                             </ScrollArea>
                         </CardContent>
                     </Card>

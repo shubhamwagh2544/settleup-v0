@@ -9,13 +9,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Bell, HelpCircle, Home, LogOut, Menu, Settings, User, Users } from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Menu, Receipt, Settings, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BACKEND_URL from '@/config';
+import { DashboardIcon } from '@radix-ui/react-icons';
 
 export function Header() {
     const location = useLocation();
@@ -67,9 +68,10 @@ export function Header() {
     };
 
     const navigation = [
-        { name: 'Home', href: '/main-room', icon: Home },
+        { name: 'Dashboard', href: '/main-room', icon: DashboardIcon },
         { name: 'Rooms', href: '/main-room', icon: Users },
-        { name: 'Account', href: '/account', icon: User },
+        { name: 'Accounts', href: '/accounts', icon: User },
+        { name: 'Transactions', href: '/transactions', icon: Receipt },
     ];
 
     return (

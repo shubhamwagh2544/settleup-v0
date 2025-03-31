@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard, Clock, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -18,6 +18,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface ExpenseUser {
     userId: number;
@@ -39,6 +40,12 @@ interface Expense {
     users: ExpenseUser[];
 }
 
+interface Account {
+    id: string;
+    accountName: string;
+    balance: number;
+}
+
 export default function PersonalExpense() {
     const { roomId, expenseId } = useParams();
     const navigate = useNavigate();
@@ -48,6 +55,8 @@ export default function PersonalExpense() {
     const [selectedBorrower, setSelectedBorrower] = useState<ExpenseUser | null>(null);
     const [allUsersSettled, setAllUsersSettled] = useState(false);
     const [isDeleteExpenseDialogOpen, setIsDeleteExpenseDialogOpen] = useState(false);
+    const [userAccounts, setUserAccounts] = useState<Account[]>([]);
+    const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -77,6 +86,22 @@ export default function PersonalExpense() {
             setAllUsersSettled(allSettled);
         }
     }, [expense]);
+
+    useEffect(() => {
+        async function fetchUserAccounts() {
+            try {
+                const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                setUserAccounts(response.data);
+            } catch (error) {
+                console.error('Error fetching user accounts:', error);
+                toast.error('Failed to load accounts');
+            }
+        }
+
+        fetchUserAccounts();
+    }, [userId]);
 
     if (loading) {
         return (
@@ -108,14 +133,18 @@ export default function PersonalExpense() {
     };
 
     const handleConfirmPayment = async () => {
-        if (!selectedBorrower) return;
+        if (!selectedBorrower || !selectedAccount) {
+            toast.error('Please select an account to pay from');
+            return;
+        }
 
         try {
             const response = await axios.put(
                 `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
                 {
                     userId: selectedBorrower.userId,
-                    amount: selectedBorrower.amountOwed
+                    amount: selectedBorrower.amountOwed,
+                    accountId: parseInt(selectedAccount)
                 },
                 {
                     headers: { Authorization: `Bearer ${getToken()}` }
@@ -132,9 +161,13 @@ export default function PersonalExpense() {
                 );
                 setExpense(updatedResponse.data);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error processing payment:', error);
-            toast.error('Failed to process payment');
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error('Failed to process payment');
+            }
         }
     };
 
@@ -355,7 +388,7 @@ export default function PersonalExpense() {
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
                         <DialogDescription>
-                            Review and confirm your payment details
+                            Select an account and confirm your payment
                         </DialogDescription>
                     </DialogHeader>
 
@@ -369,11 +402,51 @@ export default function PersonalExpense() {
                             </div>
 
                             <div className="space-y-2">
-                                <p className="text-sm text-muted-foreground">Payment Method</p>
-                                <div className="flex items-center space-x-3 p-3 rounded-lg border">
-                                    <CreditCard className="h-5 w-5 text-primary" />
-                                    <p className="font-medium">Credit/Debit Card</p>
-                                </div>
+                                <Label>Select Account</Label>
+                                <ScrollArea className="h-[200px] rounded-md border p-4">
+                                    <div className="space-y-2">
+                                        {userAccounts.length === 0 ? (
+                                            <div className="text-center py-4">
+                                                <Wallet className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                                                <p className="text-sm text-muted-foreground mt-2">No accounts available</p>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="mt-2"
+                                                    onClick={() => navigate('/main-room')}
+                                                >
+                                                    Add Account
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            userAccounts.map((account) => (
+                                                <div
+                                                    key={account.id}
+                                                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${selectedAccount === account.id
+                                                        ? 'bg-primary/10 border-primary'
+                                                        : 'hover:bg-accent'
+                                                        }`}
+                                                    onClick={() => setSelectedAccount(account.id)}
+                                                >
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                            <Wallet className="h-4 w-4 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{account.accountName}</p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Balance: ${Number(account.balance).toFixed(2)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {selectedAccount === account.id && (
+                                                        <CheckCircle className="h-4 w-4 text-primary" />
+                                                    )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </ScrollArea>
                             </div>
                         </div>
                     )}
@@ -382,16 +455,20 @@ export default function PersonalExpense() {
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
                             <Button
                                 variant="outline"
-                                onClick={() => setIsPaymentDialogOpen(false)}
+                                onClick={() => {
+                                    setIsPaymentDialogOpen(false);
+                                    setSelectedAccount(null);
+                                }}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={handleConfirmPayment}
                                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                disabled={!selectedAccount || userAccounts.length === 0}
                             >
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                Confirm Payment
+                                <Wallet className="h-4 w-4 mr-2" />
+                                Pay from Account
                             </Button>
                         </div>
                     </DialogFooter>
