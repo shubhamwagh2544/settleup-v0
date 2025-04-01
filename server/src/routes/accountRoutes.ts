@@ -27,6 +27,7 @@ class AccountRoutes {
         this.accountRouter.get('/:accountId/user/:userId', authMiddleware, accountController.getAccountByAccountId);
         this.accountRouter.post('/:accountId/user/:userId/deposit', authMiddleware, accountController.addMoneyToAccount);
         this.accountRouter.get('/:accountId/transactions', authMiddleware, accountController.getAccountTransactions);
+        this.accountRouter.delete('/:accountId', authMiddleware, accountController.deleteAccount);
     }
 
     public getRouter(): Router {

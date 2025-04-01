@@ -35,8 +35,13 @@ import {
     SendHorizontal,
     Wallet,
     XCircle,
+    Trash2,
+    Search,
+    CheckCircle,
+    Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface Transaction {
     id: number;
@@ -51,6 +56,16 @@ interface Transaction {
     receiverAccountId: number | null;
 }
 
+interface RecipientAccount {
+    id: number;
+    accountNumber: string;
+    accountName: string;
+    user: {
+        firstName: string;
+        lastName: string;
+    };
+}
+
 export default function PersonalAccount() {
     const { accountId } = useParams();
     const navigate = useNavigate();
@@ -61,6 +76,11 @@ export default function PersonalAccount() {
     const [amount, setAmount] = useState('');
     const [recipientEmail, setRecipientEmail] = useState('');
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [recipientAccounts, setRecipientAccounts] = useState<RecipientAccount[]>([]);
+    const [selectedRecipient, setSelectedRecipient] = useState<RecipientAccount | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -137,15 +157,14 @@ export default function PersonalAccount() {
     }
 
     async function handleSendMoney() {
-        const sendAmount = parseFloat(amount);
-
-        if (!amount || isNaN(sendAmount) || sendAmount <= 0) {
-            toast.error('Please enter a valid amount');
+        if (!selectedRecipient || !amount) {
+            toast.error('Please select a recipient and enter an amount');
             return;
         }
 
-        if (!recipientEmail) {
-            toast.error('Please enter recipient email');
+        const sendAmount = parseFloat(amount);
+        if (isNaN(sendAmount) || sendAmount <= 0) {
+            toast.error('Please enter a valid amount');
             return;
         }
 
@@ -153,8 +172,8 @@ export default function PersonalAccount() {
             const response = await axios.post(
                 `${BACKEND_URL}/account/${accountId}/transfer`,
                 {
-                    amount: sendAmount,
-                    recipientEmail: recipientEmail
+                    recipientAccountNumber: selectedRecipient.accountNumber,
+                    amount: sendAmount
                 },
                 { headers: { Authorization: `Bearer ${getToken()}` } }
             );
@@ -163,15 +182,17 @@ export default function PersonalAccount() {
                 toast.success('Money sent successfully');
                 setIsSendMoneyDialogOpen(false);
                 setAmount('');
-                setRecipientEmail('');
+                setSearchTerm('');
+                setSelectedRecipient(null);
 
                 // Update account balance
                 setAccount((prev) => prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev);
 
                 // Refresh transactions
-                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
-                });
+                const transactionsResponse = await axios.get(
+                    `${BACKEND_URL}/account/${accountId}/transactions`,
+                    { headers: { Authorization: `Bearer ${getToken()}` } }
+                );
                 setTransactions(transactionsResponse.data);
             }
         } catch (error: AxiosError | any) {
@@ -179,6 +200,51 @@ export default function PersonalAccount() {
             toast.error(errorMessage);
         }
     }
+
+    async function handleDeleteAccount() {
+        try {
+            const response = await axios.delete(
+                `${BACKEND_URL}/account/${accountId}`,
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+
+            if (response.status === 200) {
+                toast.success('Account deleted successfully');
+                navigate('/main-room');
+            }
+        } catch (error: AxiosError | any) {
+            if (error.response?.status === 409) {
+                toast.error('Cannot delete account with pending transactions');
+            } else {
+                toast.error('Failed to delete account');
+            }
+        }
+    }
+
+    const searchRecipients = async (term: string) => {
+        if (!term) {
+            setRecipientAccounts([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const response = await axios.get(
+                `${BACKEND_URL}/account/search?term=${term}&excludeId=${accountId}`,
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                }
+            );
+            setRecipientAccounts(response.data);
+        } catch (error) {
+            console.error('Error searching recipients:', error);
+            toast.error('Failed to search recipients');
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -228,17 +294,14 @@ export default function PersonalAccount() {
                             </p>
                         </div>
                     </div>
-                    <Badge
-                        variant={account.status === 'active' ? 'default' : 'destructive'}
-                        className="text-sm"
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => setIsDeleteAccountDialogOpen(true)}
+                        className="h-8 w-8 bg-red-500 hover:bg-red-600"
                     >
-                        {account.status === 'active' ? (
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                        ) : (
-                            <XCircle className="h-4 w-4 mr-1" />
-                        )}
-                        {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
-                    </Badge>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                 </div>
 
                 {/* Main Grid */}
@@ -246,9 +309,22 @@ export default function PersonalAccount() {
                     {/* Account Overview Card */}
                     <Card className="lg:col-span-1 bg-gradient-to-br from-background to-muted/50">
                         <CardHeader>
-                            <div className="flex items-center space-x-2">
-                                <Wallet className="h-5 w-5 text-primary" />
-                                <CardTitle>Account Overview</CardTitle>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <Wallet className="h-5 w-5 text-primary" />
+                                    <CardTitle>Account Overview</CardTitle>
+                                </div>
+                                <Badge
+                                    variant={account.status === 'active' ? 'default' : 'destructive'}
+                                    className="text-sm"
+                                >
+                                    {account.status === 'active' ? (
+                                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                                    ) : (
+                                        <XCircle className="h-4 w-4 mr-1" />
+                                    )}
+                                    {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
+                                </Badge>
                             </div>
                             <CardDescription>Your account details and balance</CardDescription>
                         </CardHeader>
@@ -435,40 +511,120 @@ export default function PersonalAccount() {
 
             {/* Send Money Dialog */}
             <Dialog open={isSendMoneyDialogOpen} onOpenChange={setIsSendMoneyDialogOpen}>
-                <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
+                <DialogContent className="sm:max-w-[500px] p-0 gap-0">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Send Money</DialogTitle>
                         <DialogDescription>
-                            Transfer money to another account
+                            Search for recipient by account number or name
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="px-6 py-4 space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="recipientEmail">Recipient Email</Label>
-                            <Input
-                                id="recipientEmail"
-                                type="email"
-                                placeholder="Enter recipient's email"
-                                value={recipientEmail}
-                                onChange={(e) => setRecipientEmail(e.target.value)}
-                            />
+                    <div className="px-6 py-4 space-y-6">
+                        {/* Recipient Search Section */}
+                        <div className="space-y-4">
+                            <Label>Search Recipient</Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Enter account number or name..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        searchRecipients(e.target.value);
+                                    }}
+                                    className="pl-9"
+                                />
+                            </div>
+
+                            {/* Recipients List */}
+                            <ScrollArea className="h-[200px] rounded-md border">
+                                {isSearching ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                    </div>
+                                ) : recipientAccounts.length > 0 ? (
+                                    <div className="p-4 space-y-2">
+                                        {recipientAccounts.map((recipient) => (
+                                            <div
+                                                key={recipient.id}
+                                                className={cn(
+                                                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors",
+                                                    selectedRecipient?.id === recipient.id
+                                                        ? "bg-primary/10 border-primary"
+                                                        : "hover:bg-accent"
+                                                )}
+                                                onClick={() => setSelectedRecipient(recipient)}
+                                            >
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        {recipient.user.firstName.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium">
+                                                            {recipient.user.firstName} {recipient.user.lastName}
+                                                        </p>
+                                                        <div className="flex items-center text-sm text-muted-foreground">
+                                                            <p>{recipient.accountName}</p>
+                                                            <span className="mx-2">•</span>
+                                                            <p>{recipient.accountNumber}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {selectedRecipient?.id === recipient.id && (
+                                                    <CheckCircle className="h-4 w-4 text-primary" />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : searchTerm ? (
+                                    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                                        <Users className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                                        <p className="text-sm text-muted-foreground">No recipients found</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                                        <Search className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                                        <p className="text-sm text-muted-foreground">
+                                            Search for recipients by account number or name
+                                        </p>
+                                    </div>
+                                )}
+                            </ScrollArea>
                         </div>
 
+                        {/* Amount Section */}
                         <div className="space-y-2">
-                            <Label htmlFor="sendAmount">Amount</Label>
+                            <Label>Amount</Label>
                             <div className="relative">
                                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    id="sendAmount"
                                     type="number"
-                                    placeholder="Enter amount"
+                                    placeholder="0.00"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="pl-9"
                                 />
                             </div>
                         </div>
+
+                        {/* Transfer Summary */}
+                        {selectedRecipient && amount && (
+                            <div className="rounded-lg border p-4 space-y-3">
+                                <h4 className="font-medium">Transfer Summary</h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">To</span>
+                                        <span className="font-medium">
+                                            {selectedRecipient.user.firstName} {selectedRecipient.user.lastName}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Amount</span>
+                                        <span className="font-medium">${Number(amount).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
@@ -477,7 +633,8 @@ export default function PersonalAccount() {
                                 variant="outline"
                                 onClick={() => {
                                     setAmount('');
-                                    setRecipientEmail('');
+                                    setSearchTerm('');
+                                    setSelectedRecipient(null);
                                     setIsSendMoneyDialogOpen(false);
                                 }}
                             >
@@ -485,10 +642,60 @@ export default function PersonalAccount() {
                             </Button>
                             <Button
                                 onClick={handleSendMoney}
+                                disabled={!selectedRecipient || !amount || Number(amount) <= 0}
                                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                             >
                                 <SendHorizontal className="h-4 w-4 mr-2" />
                                 Send Money
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Account Dialog */}
+            <Dialog open={isDeleteAccountDialogOpen} onOpenChange={setIsDeleteAccountDialogOpen}>
+                <DialogContent className="sm:max-w-[400px] p-0 gap-0">
+                    <DialogHeader className="p-6 pb-4">
+                        <DialogTitle className="text-2xl text-red-600">Delete Account</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this account? This action cannot be undone.
+                            {account.status === 'active' && (
+                                <>
+                                    {Number(account.balance) > 0 && (
+                                        <p className="mt-2 text-red-500">
+                                            Warning: This account has a balance of ${Number(account.balance).toFixed(2)}.
+                                            Please withdraw or transfer all funds before deletion.
+                                        </p>
+                                    )}
+                                    <p className="mt-2 text-red-500">
+                                        Note: You cannot delete an account with pending transactions.
+                                        Please ensure all transactions are settled before deletion.
+                                    </p>
+                                </>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="p-6 pt-4 bg-muted/40">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsDeleteAccountDialogOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={async () => {
+                                    await handleDeleteAccount();
+                                    setIsDeleteAccountDialogOpen(false);
+                                }}
+                                className="bg-red-500 hover:bg-red-600"
+                                disabled={Number(account.balance) > 0}
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Account
                             </Button>
                         </div>
                     </DialogFooter>

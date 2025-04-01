@@ -35,7 +35,7 @@ class AccountController {
             const { id: userId } = userIdValidator.data;
             const { name: accountName, type: accountType } = req.body;
             const account = await accountService.createAccount(accountName, accountType, userId);
-            return res.status(200).json(account);
+            return res.status(201).json(account);
         } catch (error) {
             return errorHandler(error, req, res);
         }
@@ -77,6 +77,16 @@ class AccountController {
             const { accountId } = req.params;
             const transactions = await accountService.getAccountTransactions(parseInt(accountId));
             return res.status(200).json(transactions);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async deleteAccount(req: Request, res: Response) {
+        try {
+            const { accountId } = req.params;
+            const result = await accountService.deleteAccount(parseInt(accountId));
+            return res.status(200).json(result);
         } catch (error) {
             return errorHandler(error, req, res);
         }

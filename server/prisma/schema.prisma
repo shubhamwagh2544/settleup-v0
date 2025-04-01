@@ -105,6 +105,7 @@ model Account {
   twoFactorSecret      String?   @map("two_factor_secret") @db.VarChar(255)
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamp(6)
+  accountNumber        String    @unique @map("account_number") @db.VarChar(16)
 
   // Relations
   userId Int  @map("user_id") @db.Integer
