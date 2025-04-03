@@ -26,19 +26,19 @@ import {
     ArrowUpRight,
     Building,
     CalendarDays,
+    CheckCircle,
     CheckCircle2,
     CreditCard,
     DollarSign,
     History,
     PlusCircle,
     Receipt,
+    Search,
     SendHorizontal,
+    Trash2,
+    Users,
     Wallet,
     XCircle,
-    Trash2,
-    Search,
-    CheckCircle,
-    Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -240,7 +240,7 @@ export default function PersonalAccount() {
             setRecipientAccounts(response.data);
         } catch (error) {
             console.error('Error searching recipients:', error);
-            toast.error('Failed to search recipients');
+            // toast.error('Failed to search recipients');
         } finally {
             setIsSearching(false);
         }

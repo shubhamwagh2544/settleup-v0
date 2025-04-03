@@ -1,7 +1,7 @@
 import { isNil } from 'lodash';
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
-import { validateAccountNumber, formatAccountNumber } from '../utils/accountUtils';
+import { validateAccountNumber, formatAccountNumber, restoreAccountNumber } from '../utils/accountUtils';
 
 const prisma = DbConfig.getInstance();
 
@@ -44,7 +44,7 @@ class AccountService {
         });
     }
 
-    // Add this private method to generate unique account numbers
+    // private method to generate unique account numbers
     private async generateUniqueAccountNumber(): Promise<string> {
         const ACCOUNT_NUMBER_LENGTH = 12; // Standard length for account numbers
         const MAX_ATTEMPTS = 10; // Maximum attempts to generate unique number
@@ -295,11 +295,7 @@ class AccountService {
         })));
     }
 
-    async transferMoney(
-        senderAccountId: number,
-        recipientAccountNumber: string,
-        amount: number
-    ) {
+    async transferMoney(senderAccountId: number, recipientAccountNumber: string, amount: number) {
         // Start transaction
         return await prisma.$transaction(async (tx) => {
             // Get sender account
@@ -317,7 +313,7 @@ class AccountService {
             // Get recipient account
             const recipientAccount = await tx.account.findUnique({
                 where: {
-                    accountNumber: recipientAccountNumber,
+                    accountNumber: restoreAccountNumber(recipientAccountNumber),
                     status: 'active'
                 }
             });
@@ -357,11 +353,25 @@ class AccountService {
                 }
             });
 
+            // Create transaction record for recipient
+            await tx.transaction.create({
+                data: {
+                    amount,
+                    type: 'TRANSFER',
+                    status: 'COMPLETED',
+                    description: 'Received money from account ' + senderAccount.accountNumber,
+                    senderId: senderAccount.userId,
+                    receiverId: recipientAccount.userId,
+                    senderAccountId: senderAccount.id,
+                    receiverAccountId: recipientAccount.id
+                }
+            });
+
             return {
                 message: 'Transfer successful',
                 balance: Number(senderAccount.balance) - amount
             };
-        });
+        }, { timeout: 30000 });
     }
 }
 

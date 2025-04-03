@@ -92,6 +92,36 @@ class AccountController {
         }
     }
 
+    async searchAccounts(req: Request, res: Response) {
+        try {
+            const { term, excludeId } = req.query;
+            if (!term || !excludeId) {
+                return res.status(400).json({ message: 'Search term and excludeId are required' });
+            }
+            const accounts = await accountService.searchRecipientAccounts(
+                term.toString(),
+                parseInt(excludeId.toString())
+            );
+            return res.status(200).json(accounts);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async transferMoney(req: Request, res: Response) {
+        try {
+            const { accountId } = req.params;
+            const { amount, recipientAccountNumber } = req.body;
+            const transaction = await accountService.transferMoney(
+                parseInt(accountId),
+                recipientAccountNumber,
+                amount
+            );
+            return res.status(200).json(transaction);
+        } catch (error) {
+            return errorHandler(error, req, res);
+        }
+    }
 }
 
 export default AccountController;

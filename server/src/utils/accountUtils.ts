@@ -15,4 +15,9 @@ export const formatAccountNumber = (accountNumber: string): string => {
     // Format: XXXX-XXXX-XXXX
     const number = accountNumber.replace('DEV', '');
     return number.replace(/(\d{4})/g, '$1-').slice(0, -1);
-}; 
+};
+
+export const restoreAccountNumber = (formattedAccountNumber: string): string => {
+    return process.env.NODE_ENV === 'production' ?
+        formattedAccountNumber.replace(/-/g, '') : `DEV${formattedAccountNumber.replace(/-/g, '')}`;
+};

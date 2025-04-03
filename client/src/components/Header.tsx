@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Bell, HelpCircle, LogOut, Menu, Receipt, Settings, User, Users } from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Menu, Receipt, Settings, SquareActivity, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -69,8 +69,9 @@ export function Header() {
 
     const navigation = [
         { name: 'Dashboard', href: '/main-room', icon: DashboardIcon },
-        { name: 'Rooms', href: '/main-room', icon: Users },
+        { name: 'Rooms', href: '/rooms', icon: Users },
         { name: 'Accounts', href: '/accounts', icon: User },
+        { name: 'Expenses', href: '/expenses', icon: SquareActivity },
         { name: 'Transactions', href: '/transactions', icon: Receipt },
     ];
 
