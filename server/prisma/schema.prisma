@@ -136,6 +136,8 @@ model Transaction {
   receiverId Int?
   receiver   User? @relation("ReceiverTransactions", fields: [receiverId], references: [id])
 
+  direction String? @default("outgoing")
+
   // Expense Relationship
   expenseId Int?     @map("expense_id")
   expense   Expense? @relation(fields: [expenseId], references: [id])

@@ -409,48 +409,77 @@ export default function PersonalAccount() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {transactions.map((transaction) => (
-                                            <motion.div
-                                                key={transaction.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                            >
-                                                <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="space-y-1">
-                                                            <h3 className="font-medium">
-                                                                {transaction.description}
-                                                            </h3>
-                                                            <div className="flex items-center space-x-2">
-                                                                <Badge variant="outline">
-                                                                    {transaction.type === 'DEPOSIT' ? (
-                                                                        <ArrowDownRight className="h-3 w-3 mr-1 text-green-500" />
-                                                                    ) : transaction.type === 'WITHDRAWAL' ? (
-                                                                        <ArrowUpRight className="h-3 w-3 mr-1 text-red-500" />
-                                                                    ) : (
-                                                                        <Receipt className="h-3 w-3 mr-1 text-purple-500" />
-                                                                    )}
-                                                                    {transaction.type}
-                                                                </Badge>
-                                                                <Badge variant={transaction.status === 'COMPLETED' ? 'success' : 'destructive'}>
-                                                                    {transaction.status}
-                                                                </Badge>
+                                        {transactions.map((transaction) => {
+                                            const isCredit =
+                                                transaction.type === 'DEPOSIT' ||
+                                                (transaction.type === 'TRANSFER' && transaction.direction === 'incoming');
+
+                                            const amountDisplay = `${isCredit ? '+' : '-'}${Number(transaction.amount).toFixed(2)}`;
+
+                                            const senderName = transaction.senderAccount?.user
+                                                ? `${transaction.senderAccount.user.firstName} ${transaction.senderAccount.user.lastName}`
+                                                : '';
+                                            const receiverName = transaction.receiverAccount?.user
+                                                ? `${transaction.receiverAccount.user.firstName} ${transaction.receiverAccount.user.lastName}`
+                                                : '';
+
+                                            const displayDescription =
+                                                transaction.type === 'TRANSFER'
+                                                    ? transaction.direction === 'outgoing'
+                                                        ? `Transfer to ${receiverName}`
+                                                        : `Transfer from ${senderName}`
+                                                    : transaction.description;
+
+                                            return (
+                                                <motion.div
+                                                    key={transaction.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                >
+                                                    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="space-y-1">
+                                                                <h3 className="font-medium">{displayDescription}</h3>
+
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Badge variant="outline">
+                                                                        {transaction.type === 'DEPOSIT' ? (
+                                                                            <ArrowDownRight className="h-3 w-3 mr-1 text-green-500" />
+                                                                        ) : transaction.type === 'WITHDRAWAL' ? (
+                                                                            <ArrowUpRight className="h-3 w-3 mr-1 text-red-500" />
+                                                                        ) : (
+                                                                            <Receipt className="h-3 w-3 mr-1 text-purple-500" />
+                                                                        )}
+                                                                        {transaction.type}
+                                                                    </Badge>
+                                                                    <Badge
+                                                                        variant={
+                                                                            transaction.status === 'COMPLETED'
+                                                                                ? 'success'
+                                                                                : 'destructive'
+                                                                        }
+                                                                    >
+                                                                        {transaction.status}
+                                                                    </Badge>
+                                                                </div>
                                                             </div>
+
+                                                            <Badge
+                                                                variant={isCredit ? 'success' : 'destructive'}
+                                                                className="text-lg"
+                                                            >
+                                                                {amountDisplay}
+                                                            </Badge>
                                                         </div>
-                                                        <Badge
-                                                            variant={transaction.type === 'DEPOSIT' ? 'success' : 'destructive'}
-                                                            className="text-lg"
-                                                        >
-                                                            {transaction.type === 'DEPOSIT' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
-                                                        </Badge>
+
+                                                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                                            <CalendarDays className="h-4 w-4" />
+                                                            <span>{new Date(transaction.createdAt).toLocaleString()}</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                                        <CalendarDays className="h-4 w-4" />
-                                                        <span>{new Date(transaction.createdAt).toLocaleString()}</span>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
+                                                </motion.div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </ScrollArea>
