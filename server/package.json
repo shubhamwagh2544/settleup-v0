@@ -7,7 +7,7 @@
         "build": "npx tsc -b",
         "start": "npx tsc -b && node dist/index.js",
         "format": "prettier --write .",
-        "seed": "ts-node scripts/seed.ts"
+        "seed": "ts-node src/scripts/seed.ts"
     },
     "keywords": [],
     "author": "",

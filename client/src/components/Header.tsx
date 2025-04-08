@@ -9,10 +9,9 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Bell, HelpCircle, LogOut, Menu, Receipt, Settings, SquareActivity, User, Users } from 'lucide-react';
+import { HelpCircle, LogOut, Menu, Receipt, Settings, SquareActivity, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BACKEND_URL from '@/config';
@@ -22,7 +21,7 @@ export function Header() {
     const location = useLocation();
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
-    const [notifications, setNotifications] = useState(3); // Example notification count
+    // const [notifications, setNotifications] = useState(3);
     const [user, setUser] = useState({ firstName: '', lastName: '', email: '' });
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -44,7 +43,7 @@ export function Header() {
                 if (!userId) return;
 
                 const response = await axios.get(`${BACKEND_URL}/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
 
                 setUser(response.data);
@@ -76,10 +75,12 @@ export function Header() {
     ];
 
     return (
-        <header className={cn(
-            "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-            isScrolled && "shadow-sm"
-        )}>
+        <header
+            className={cn(
+                'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+                isScrolled && 'shadow-sm'
+            )}
+        >
             <div className="container mx-auto">
                 <div className="flex h-16 items-center px-4 md:px-6">
                     {/* Mobile Menu */}
@@ -98,10 +99,10 @@ export function Header() {
                                             key={item.name}
                                             to={item.href}
                                             className={cn(
-                                                "flex items-center space-x-2 px-2 py-1.5 text-sm font-medium rounded-md",
+                                                'flex items-center space-x-2 px-2 py-1.5 text-sm font-medium rounded-md',
                                                 location.pathname === item.href
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                                             )}
                                         >
                                             <Icon className="h-4 w-4" />
@@ -130,10 +131,10 @@ export function Header() {
                                     key={item.name}
                                     to={item.href}
                                     className={cn(
-                                        "flex items-center space-x-1 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        'flex items-center space-x-1 px-2 py-1.5 text-sm font-medium rounded-md transition-colors',
                                         location.pathname === item.href
-                                            ? "text-primary"
-                                            : "text-muted-foreground hover:text-primary"
+                                            ? 'text-primary'
+                                            : 'text-muted-foreground hover:text-primary'
                                     )}
                                 >
                                     <Icon className="h-4 w-4" />
@@ -146,36 +147,36 @@ export function Header() {
                     {/* Right Section */}
                     <div className="ml-auto flex items-center space-x-4">
                         {/* Notifications */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="relative">
-                                    <Bell className="h-5 w-5" />
-                                    {notifications > 0 && (
-                                        <Badge
-                                            variant="destructive"
-                                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
-                                        >
-                                            {notifications}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-80">
-                                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <div className="max-h-[400px] overflow-y-auto">
-                                    {/* Example notifications */}
-                                    <DropdownMenuItem className="flex flex-col items-start">
-                                        <div className="font-medium">New expense added</div>
-                                        <div className="text-sm text-muted-foreground">John added a new expense in "Trip to Paris"</div>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="flex flex-col items-start">
-                                        <div className="font-medium">Payment received</div>
-                                        <div className="text-sm text-muted-foreground">Sarah paid you $25.00</div>
-                                    </DropdownMenuItem>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/*<DropdownMenu>*/}
+                        {/*    <DropdownMenuTrigger asChild>*/}
+                        {/*        <Button variant="ghost" size="icon" className="relative">*/}
+                        {/*            <Bell className="h-5 w-5" />*/}
+                        {/*            {notifications > 0 && (*/}
+                        {/*                <Badge*/}
+                        {/*                    variant="destructive"*/}
+                        {/*                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"*/}
+                        {/*                >*/}
+                        {/*                    {notifications}*/}
+                        {/*                </Badge>*/}
+                        {/*            )}*/}
+                        {/*        </Button>*/}
+                        {/*    </DropdownMenuTrigger>*/}
+                        {/*    <DropdownMenuContent align="end" className="w-80">*/}
+                        {/*        <DropdownMenuLabel>Notifications</DropdownMenuLabel>*/}
+                        {/*        <DropdownMenuSeparator />*/}
+                        {/*        <div className="max-h-[400px] overflow-y-auto">*/}
+                        {/*            /!* Example notifications *!/*/}
+                        {/*            <DropdownMenuItem className="flex flex-col items-start">*/}
+                        {/*                <div className="font-medium">New expense added</div>*/}
+                        {/*                <div className="text-sm text-muted-foreground">John added a new expense in "Trip to Paris"</div>*/}
+                        {/*            </DropdownMenuItem>*/}
+                        {/*            <DropdownMenuItem className="flex flex-col items-start">*/}
+                        {/*                <div className="font-medium">Payment received</div>*/}
+                        {/*                <div className="text-sm text-muted-foreground">Sarah paid you $25.00</div>*/}
+                        {/*            </DropdownMenuItem>*/}
+                        {/*        </div>*/}
+                        {/*    </DropdownMenuContent>*/}
+                        {/*</DropdownMenu>*/}
 
                         {/* User Menu */}
                         <DropdownMenu>
@@ -195,9 +196,7 @@ export function Header() {
                                         <p className="text-sm font-medium">
                                             {user.firstName} {user.lastName}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {user.email}
-                                        </p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />

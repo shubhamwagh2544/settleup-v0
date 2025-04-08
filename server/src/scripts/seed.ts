@@ -1,7 +1,9 @@
 import * as bcrypt from 'bcrypt';
-import DbConfig from '../src/config/dbConfig';
+import DbConfig from '../config/dbConfig';
+import AccountService from '../services/accountService';
 
 const prisma = DbConfig.getInstance();
+const accountService = AccountService.getInstance();
 
 async function main() {
     console.log('🌱 Starting database seeding...');
@@ -36,6 +38,7 @@ async function main() {
             data: {
                 userId: createdUser.id,
                 accountName: `${user.firstName}'s Account`,
+                accountNumber: await accountService.generateUniqueAccountNumber(),
                 accountType: 'saving',
                 balance: 1000.00,
                 status: 'active',
@@ -55,4 +58,4 @@ main()
     })
     .finally(async () => {
         // await prisma.$disconnect();
-    }); 
+    });

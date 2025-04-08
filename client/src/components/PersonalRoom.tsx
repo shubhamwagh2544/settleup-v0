@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import BACKEND_URL from '@/config';
 import { get, isEmpty, isNil } from 'lodash';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -19,9 +19,9 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { parseMoney, roundMoney, formatMoney } from '@/lib/money';
+import { parseMoney, roundMoney } from '@/lib/money';
 
 interface Room {
     id: string;
@@ -229,28 +229,28 @@ export default function PersonalRoom() {
         }
     }
 
-    async function handleDeleteExpense(expenseId: number) {
-        try {
-            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` }
-            });
-
-            if (response?.data.includes('Delete Successful') && response?.status === 200) {
-                toast.success('Expense deleted successfully');
-                // Refresh room data to update the expenses list
-                const updatedResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
-                setRoom(updatedResponse.data);
-            }
-        } catch (error: AxiosError | any) {
-            if (error.response?.status === 409 || error.response?.status === 404) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error('Failed to delete expense');
-            }
-        }
-    }
+    // async function handleDeleteExpense(expenseId: number) {
+    //     try {
+    //         const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
+    //             headers: { Authorization: `Bearer ${getToken()}` },
+    //         });
+    //
+    //         if (response?.data.includes('Delete Successful') && response?.status === 200) {
+    //             toast.success('Expense deleted successfully');
+    //             // Refresh room data to update the expenses list
+    //             const updatedResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
+    //                 headers: { Authorization: `Bearer ${getToken()}` },
+    //             });
+    //             setRoom(updatedResponse.data);
+    //         }
+    //     } catch (error: AxiosError | any) {
+    //         if (error.response?.status === 409 || error.response?.status === 404) {
+    //             toast.error(error.response.data.message);
+    //         } else {
+    //             toast.error('Failed to delete expense');
+    //         }
+    //     }
+    // }
 
     if (isEmpty(room) || isNil(room)) {
         return (
@@ -279,7 +279,7 @@ export default function PersonalRoom() {
                             <p className="text-muted-foreground">Manage expenses and members</p>
                         </div>
                     </div>
-                    {roomUsers.some(user => get(user, 'id') === Number(getUserId()) && get(user, 'isAdmin')) && (
+                    {roomUsers.some((user) => get(user, 'id') === Number(getUserId()) && get(user, 'isAdmin')) && (
                         <Button
                             variant="destructive"
                             onClick={() => setIsDeleteRoomDialogOpen(true)}
@@ -326,7 +326,8 @@ export default function PersonalRoom() {
                                                 <div className="flex-1 flex items-center justify-between">
                                                     <div>
                                                         <p className="font-medium">
-                                                            {get(user, 'firstName', 'N/A')} {get(user, 'lastName', 'N/A')}
+                                                            {get(user, 'firstName', 'N/A')}{' '}
+                                                            {get(user, 'lastName', 'N/A')}
                                                         </p>
                                                         <p className="text-sm text-muted-foreground">
                                                             {get(user, 'email', 'N/A')}
@@ -417,26 +418,37 @@ export default function PersonalRoom() {
 
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs
-                                                                    ${expense.isSettled
-                                                                        ? 'bg-gradient-to-br from-green-600 to-emerald-600'
-                                                                        : 'bg-gradient-to-br from-purple-600 to-indigo-600'}`}
+                                                                <div
+                                                                    className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs
+                                                                    ${
+                                                                        expense.isSettled
+                                                                            ? 'bg-gradient-to-br from-green-600 to-emerald-600'
+                                                                            : 'bg-gradient-to-br from-purple-600 to-indigo-600'
+                                                                    }`}
                                                                 >
                                                                     {lender?.fullName?.charAt(0) || 'U'}
                                                                 </div>
                                                                 <span>Paid by {lender?.fullName || 'Unknown'}</span>
                                                                 <span>•</span>
-                                                                <span>{new Date(expense.createdAt).toLocaleDateString()}</span>
+                                                                <span>
+                                                                    {new Date(expense.createdAt).toLocaleDateString()}
+                                                                </span>
                                                             </div>
 
                                                             {/* Status Badge moved to bottom right */}
                                                             {expense.isSettled ? (
-                                                                <Badge variant="success" className="bg-green-100 text-green-700 border-0 text-xs">
+                                                                <Badge
+                                                                    variant="success"
+                                                                    className="bg-green-100 text-green-700 border-0 text-xs"
+                                                                >
                                                                     <CheckCircle className="h-3 w-3 mr-1" />
                                                                     Settled
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-0 text-xs">
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="bg-yellow-100 text-yellow-700 border-0 text-xs"
+                                                                >
                                                                     <Clock className="h-3 w-3 mr-1" />
                                                                     Pending
                                                                 </Badge>
@@ -520,7 +532,9 @@ export default function PersonalRoom() {
                                             <div className="flex flex-col items-center justify-center py-4 space-y-3 text-center">
                                                 <Users className="h-12 w-12 text-muted-foreground/50" />
                                                 <div className="space-y-1">
-                                                    <p className="text-sm text-muted-foreground font-medium">No users to split with</p>
+                                                    <p className="text-sm text-muted-foreground font-medium">
+                                                        No users to split with
+                                                    </p>
                                                     <p className="text-xs text-muted-foreground">
                                                         Add members to the room to split expenses with them
                                                     </p>
@@ -544,16 +558,26 @@ export default function PersonalRoom() {
                                                 {roomUsers
                                                     .filter((user) => get(user, 'id') !== Number(getUserId()))
                                                     .map((user) => (
-                                                        <div key={get(user, 'id')} className="flex items-center space-x-2">
+                                                        <div
+                                                            key={get(user, 'id')}
+                                                            className="flex items-center space-x-2"
+                                                        >
                                                             <input
                                                                 type="checkbox"
                                                                 id={`user-${get(user, 'id')}`}
                                                                 className="rounded border-muted"
                                                                 onChange={(e) => {
                                                                     if (e.target.checked) {
-                                                                        setSelectedUsers([...selectedUsers, get(user, 'id')]);
+                                                                        setSelectedUsers([
+                                                                            ...selectedUsers,
+                                                                            get(user, 'id'),
+                                                                        ]);
                                                                     } else {
-                                                                        setSelectedUsers(selectedUsers.filter(id => id !== get(user, 'id')));
+                                                                        setSelectedUsers(
+                                                                            selectedUsers.filter(
+                                                                                (id) => id !== get(user, 'id')
+                                                                            )
+                                                                        );
                                                                     }
                                                                 }}
                                                                 checked={selectedUsers.includes(get(user, 'id'))}
@@ -651,22 +675,22 @@ export default function PersonalRoom() {
 
                     {allUsers.filter((user) => !roomUsers.some((roomUser) => get(roomUser, 'id') === get(user, 'id')))
                         .length > 0 && (
-                            <DialogFooter className="p-6 pt-4 bg-muted/40">
-                                <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                                    <Button variant="outline" onClick={() => setIsAddUsersDialogOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={handleAddUsers}
-                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                                        disabled={selectedUsers.length === 0}
-                                    >
-                                        <UserPlus className="h-4 w-4 mr-2" />
-                                        Add Selected Members
-                                    </Button>
-                                </div>
-                            </DialogFooter>
-                        )}
+                        <DialogFooter className="p-6 pt-4 bg-muted/40">
+                            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+                                <Button variant="outline" onClick={() => setIsAddUsersDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleAddUsers}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                    disabled={selectedUsers.length === 0}
+                                >
+                                    <UserPlus className="h-4 w-4 mr-2" />
+                                    Add Selected Members
+                                </Button>
+                            </div>
+                        </DialogFooter>
+                    )}
                 </DialogContent>
             </Dialog>
 
@@ -687,10 +711,7 @@ export default function PersonalRoom() {
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsDeleteRoomDialogOpen(false)}
-                            >
+                            <Button variant="outline" onClick={() => setIsDeleteRoomDialogOpen(false)}>
                                 Cancel
                             </Button>
                             <Button

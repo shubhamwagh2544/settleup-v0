@@ -1,12 +1,12 @@
 export type AccountType = 'saving' | 'current';
 
-type AccountStatus = 'active' | 'inactive' | 'suspended';
+// type AccountStatus = 'active' | 'inactive' | 'suspended';
 
 export interface Account {
     id: string;
     accountName: string;
     accountType: string;
-    balance: number;
+    balance: string | number;
     status: string;
     expenses: Array<{
         id: string;

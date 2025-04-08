@@ -44,8 +44,8 @@ class AccountService {
         });
     }
 
-    // private method to generate unique account numbers
-    private async generateUniqueAccountNumber(): Promise<string> {
+    // method to generate unique account numbers
+    async generateUniqueAccountNumber(): Promise<string> {
         const ACCOUNT_NUMBER_LENGTH = 12; // Standard length for account numbers
         const MAX_ATTEMPTS = 10; // Maximum attempts to generate unique number
 

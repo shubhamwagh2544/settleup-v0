@@ -74,7 +74,6 @@ export default function PersonalAccount() {
     const [isAddMoneyDialogOpen, setIsAddMoneyDialogOpen] = useState(false);
     const [isSendMoneyDialogOpen, setIsSendMoneyDialogOpen] = useState(false);
     const [amount, setAmount] = useState('');
-    const [recipientEmail, setRecipientEmail] = useState('');
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -409,7 +408,7 @@ export default function PersonalAccount() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {transactions.map((transaction) => {
+                                        {transactions.map((transaction: any) => {
                                             const isCredit =
                                                 transaction.type === 'DEPOSIT' ||
                                                 (transaction.type === 'TRANSFER' && transaction.direction === 'incoming');
