@@ -1,10 +1,10 @@
 import React from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, Mail } from 'lucide-react';
 import BACKEND_URL from '../config.ts';
 import { toast } from 'sonner';
-import { useSocket } from '@/SocketProvider.tsx';
+// import { useSocket } from '@/SocketProvider.tsx';
 import { get } from 'lodash';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ const formSchema = z.object({
 export default function SignIn() {
     const [showPassword, setShowPassword] = React.useState(false);
     const navigate = useNavigate();
-    const socket = useSocket();
+    // const socket = useSocket();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -36,13 +36,13 @@ export default function SignIn() {
         },
     });
 
-    if (!socket) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
-            </div>
-        );
-    }
+    // if (!socket) {
+    //     return (
+    //         <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+    //             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+    //         </div>
+    //     );
+    // }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
@@ -61,7 +61,7 @@ export default function SignIn() {
 
             if (response.status === 200) {
                 const { user, token } = response.data;
-                socket?.emit('joinDefaultRoom', { user });
+                // socket?.emit('joinDefaultRoom', { user });
                 toast.success(`Welcome back, ${get(user, 'firstName', '')}! 🎉`);
 
                 if (values.rememberMe) {

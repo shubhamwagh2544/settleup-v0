@@ -3,7 +3,6 @@ import MainRoom from '@/components/MainRoom.tsx';
 import PersonalAccount from '@/components/PersonalAccount.tsx';
 import PersonalRoom from '@/components/PersonalRoom.tsx';
 import RoomExpenses from '@/components/RoomExpenses.tsx';
-import { SocketProvider } from '@/SocketProvider.tsx';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import SignIn from './components/SignIn.tsx';
 import SignUp from './components/SignUp.tsx';
@@ -33,11 +32,11 @@ function Layout() {
 
 function App() {
     return (
-        <SocketProvider>
-            <BrowserRouter>
-                <Layout />
-            </BrowserRouter>
-        </SocketProvider>
+        // <SocketProvider>
+        <BrowserRouter>
+            <Layout />
+        </BrowserRouter>
+        // </SocketProvider>
     );
 }
 

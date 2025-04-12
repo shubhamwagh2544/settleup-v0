@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import BACKEND_URL from '../config.ts';
-import { useSocket } from '@/SocketProvider.tsx';
+// import { useSocket } from '@/SocketProvider.tsx';
 import { get } from 'lodash';
 import { Eye, EyeOff, UserPlus, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ const formSchema = z.object({
 export default function SignUp() {
     const [showPassword, setShowPassword] = React.useState(false);
     const navigate = useNavigate();
-    const socket = useSocket();
+    // const socket = useSocket();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,7 +46,7 @@ export default function SignUp() {
             });
             if (response.status === 201) {
                 const user = response.data.user;
-                socket?.emit('joinDefaultRoom', { user });
+                // socket?.emit('joinDefaultRoom', { user });
 
                 toast.success(`Welcome to SettleUp, ${get(user, 'firstName', '')}! 🎉`);
 
