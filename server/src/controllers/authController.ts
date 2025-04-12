@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { isNil } from 'lodash';
 
+import logger from '../utils/logger';
 import errorHandler from '../middlewares/errorHandler';
 import AuthService from '../services/authService';
 import UserService from '../services/userService';
 
 const authService = AuthService.getInstance();
 const userService = UserService.getInstance();
+const LoggerLabel = 'AuthController';
 
 declare global {
     namespace Express {
@@ -20,7 +22,7 @@ declare global {
 class AuthController {
     private static instance: AuthController;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance() {
         if (isNil(AuthController.instance)) {
@@ -42,9 +44,11 @@ class AuthController {
     async signIn(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
+            logger.info(`Sign In request from ${email}`, { label: LoggerLabel });
             const [user, token] = await authService.signIn(email, password);
             return res.status(200).json({ user, token });
         } catch (error) {
+            logger.error(`Error occurred while Sign In request: `, { label: LoggerLabel, error });
             return errorHandler(error, req, res);
         }
     }
