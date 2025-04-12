@@ -3,7 +3,6 @@ import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
 
 export function useLoggedInUser() {
-
     const [user, setUser] = useState({});
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -13,8 +12,8 @@ export function useLoggedInUser() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/auth/me`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    }
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
                 });
                 setUser(response.data);
             } catch (err: any) {

@@ -8,16 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    ArrowLeft,
-    Receipt,
-    Wallet,
-    DollarSign,
-    Trash2,
-    CreditCard,
-    Users,
-    Search
-} from 'lucide-react';
+import { ArrowLeft, Receipt, Wallet, DollarSign, Trash2, CreditCard, Users, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
     Dialog,
@@ -49,11 +40,11 @@ export default function RoomExpenses() {
             try {
                 const [expensesResponse, roomResponse] = await Promise.all([
                     axios.get(`${BACKEND_URL}/expense/room/${roomId}`, {
-                        headers: { Authorization: `Bearer ${getToken()}` }
+                        headers: { Authorization: `Bearer ${getToken()}` },
                     }),
                     axios.get(`${BACKEND_URL}/room/${roomId}`, {
-                        headers: { Authorization: `Bearer ${getToken()}` }
-                    })
+                        headers: { Authorization: `Bearer ${getToken()}` },
+                    }),
                 ]);
 
                 setExpenses(expensesResponse.data);
@@ -73,7 +64,7 @@ export default function RoomExpenses() {
     async function deleteExpense(expenseId: number) {
         try {
             const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` }
+                headers: { Authorization: `Bearer ${getToken()}` },
             });
 
             if (response?.data.includes('Delete Successful') && response?.status === 200) {
@@ -94,9 +85,10 @@ export default function RoomExpenses() {
         setIsPaymentDialogOpen(true);
     }
 
-    const filteredExpenses = expenses.filter((expense: any) =>
-        expense.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredExpenses = expenses.filter(
+        (expense: any) =>
+            expense.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            expense.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) {
@@ -113,11 +105,7 @@ export default function RoomExpenses() {
                 <Receipt className="h-16 w-16 text-red-500 mb-4" />
                 <h2 className="text-2xl font-bold text-red-500">Error Loading Expenses</h2>
                 <p className="text-muted-foreground mt-2">{error}</p>
-                <Button
-                    variant="outline"
-                    onClick={() => window.location.reload()}
-                    className="mt-4"
-                >
+                <Button variant="outline" onClick={() => window.location.reload()} className="mt-4">
                     Try Again
                 </Button>
             </div>
@@ -141,12 +129,8 @@ export default function RoomExpenses() {
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">
-                                {get(room, 'name', 'Room')} Expenses
-                            </h1>
-                            <p className="text-muted-foreground">
-                                Track and manage shared expenses
-                            </p>
+                            <h1 className="text-3xl font-bold tracking-tight">{get(room, 'name', 'Room')} Expenses</h1>
+                            <p className="text-muted-foreground">Track and manage shared expenses</p>
                         </div>
                     </div>
                 </div>
@@ -197,9 +181,7 @@ export default function RoomExpenses() {
                                                     {/* Expense Header */}
                                                     <div className="flex items-start justify-between">
                                                         <div className="space-y-1">
-                                                            <h3 className="text-lg font-semibold">
-                                                                {expense.name}
-                                                            </h3>
+                                                            <h3 className="text-lg font-semibold">{expense.name}</h3>
                                                             {expense.description && (
                                                                 <p className="text-muted-foreground">
                                                                     {expense.description}
@@ -207,8 +189,8 @@ export default function RoomExpenses() {
                                                             )}
                                                             <div className="flex items-center space-x-2">
                                                                 <Badge variant="outline">
-                                                                    <DollarSign className="h-3 w-3 mr-1" />
-                                                                    ${expense.amount}
+                                                                    <DollarSign className="h-3 w-3 mr-1" />$
+                                                                    {expense.amount}
                                                                 </Badge>
                                                                 <Badge variant="outline">
                                                                     <Users className="h-3 w-3 mr-1" />
@@ -244,7 +226,8 @@ export default function RoomExpenses() {
                                                     <div className="space-y-2">
                                                         <p className="text-sm font-medium">Split with</p>
                                                         {borrowers.map((borrower: any) => {
-                                                            const isBorrower = borrower.userId === Number(loggedInUserId);
+                                                            const isBorrower =
+                                                                borrower.userId === Number(loggedInUserId);
                                                             return (
                                                                 <div
                                                                     key={borrower.userId}
@@ -292,9 +275,7 @@ export default function RoomExpenses() {
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Payment Details</DialogTitle>
-                        <DialogDescription>
-                            Review and confirm your payment
-                        </DialogDescription>
+                        <DialogDescription>Review and confirm your payment</DialogDescription>
                     </DialogHeader>
 
                     {selectedExpense && (
@@ -307,7 +288,13 @@ export default function RoomExpenses() {
                             <div className="space-y-2">
                                 <p className="text-sm text-muted-foreground">Amount to Pay</p>
                                 <p className="text-2xl font-bold text-primary">
-                                    ${find(get(selectedExpense, 'users'), (u: any) => u.userId === Number(loggedInUserId))?.amountOwed}
+                                    $
+                                    {
+                                        find(
+                                            get(selectedExpense, 'users'),
+                                            (u: any) => u.userId === Number(loggedInUserId)
+                                        )?.amountOwed
+                                    }
                                 </p>
                             </div>
 
@@ -325,10 +312,7 @@ export default function RoomExpenses() {
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsPaymentDialogOpen(false)}
-                            >
+                            <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>
                                 Cancel
                             </Button>
                             <Button

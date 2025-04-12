@@ -44,14 +44,13 @@ class UserService {
                 isActive: true,
                 id: {
                     not: 0,
-                }
+                },
             },
         });
     }
 
     async getUserInfo(id: number) {
         // User => Rooms => Accounts => Expenses
-
     }
 
     async updateUser(id: number) {

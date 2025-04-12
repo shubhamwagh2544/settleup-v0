@@ -18,6 +18,7 @@ export const formatAccountNumber = (accountNumber: string): string => {
 };
 
 export const restoreAccountNumber = (formattedAccountNumber: string): string => {
-    return process.env.NODE_ENV === 'production' ?
-        formattedAccountNumber.replace(/-/g, '') : `DEV${formattedAccountNumber.replace(/-/g, '')}`;
+    return process.env.NODE_ENV === 'production'
+        ? formattedAccountNumber.replace(/-/g, '')
+        : `DEV${formattedAccountNumber.replace(/-/g, '')}`;
 };

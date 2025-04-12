@@ -7,7 +7,7 @@ class DbConfig {
 
     private static createPrismaInstance() {
         return new PrismaClient({
-            log: ['query']
+            log: ['query'],
         }).$extends(userModel);
     }
 

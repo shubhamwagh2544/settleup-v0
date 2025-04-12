@@ -81,8 +81,8 @@ export default function PersonalExpense() {
 
     useEffect(() => {
         if (expense) {
-            const borrowers = expense.users.filter(user => !user.isLender);
-            const allSettled = borrowers.every(user => user.isSettled);
+            const borrowers = expense.users.filter((user) => !user.isLender);
+            const allSettled = borrowers.every((user) => user.isSettled);
             setAllUsersSettled(allSettled);
         }
     }, [expense]);
@@ -91,7 +91,7 @@ export default function PersonalExpense() {
         async function fetchUserAccounts() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
                 setUserAccounts(response.data);
             } catch (error) {
@@ -144,10 +144,10 @@ export default function PersonalExpense() {
                 {
                     userId: selectedBorrower.userId,
                     amount: selectedBorrower.amountOwed,
-                    accountId: parseInt(selectedAccount)
+                    accountId: parseInt(selectedAccount),
                 },
                 {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 }
             );
 
@@ -155,10 +155,9 @@ export default function PersonalExpense() {
                 toast.success('Payment processed successfully');
                 setIsPaymentDialogOpen(false);
                 // Refresh expense data
-                const updatedResponse = await axios.get(
-                    `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
-                    { headers: { Authorization: `Bearer ${getToken()}` } }
-                );
+                const updatedResponse = await axios.get(`${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
                 setExpense(updatedResponse.data);
             }
         } catch (error: any) {
@@ -179,17 +178,16 @@ export default function PersonalExpense() {
                 `${BACKEND_URL}/expense/${expense.id}/settle`,
                 {},
                 {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 }
             );
 
             if (response.status === 200) {
                 toast.success('Expense settled successfully');
                 // Refresh expense data
-                const updatedResponse = await axios.get(
-                    `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
-                    { headers: { Authorization: `Bearer ${getToken()}` } }
-                );
+                const updatedResponse = await axios.get(`${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
                 setExpense(updatedResponse.data);
             }
         } catch (error) {
@@ -200,12 +198,9 @@ export default function PersonalExpense() {
 
     async function handleDeleteExpense() {
         try {
-            const response = await axios.delete(
-                `${BACKEND_URL}/expense/${expenseId}`,
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` }
-                }
-            );
+            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
 
             if (response?.data.includes('Delete Successful') && response?.status === 200) {
                 toast.success('Expense deleted successfully');
@@ -289,7 +284,9 @@ export default function PersonalExpense() {
                                                 <div className="space-y-4">
                                                     <div className="flex items-center text-green-600">
                                                         <CheckCircle className="h-5 w-5 mr-2" />
-                                                        <span className="font-medium">All users have settled their dues</span>
+                                                        <span className="font-medium">
+                                                            All users have settled their dues
+                                                        </span>
                                                     </div>
                                                     <Button
                                                         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
@@ -302,7 +299,9 @@ export default function PersonalExpense() {
                                             ) : (
                                                 <div className="flex items-center text-yellow-600">
                                                     <Clock className="h-5 w-5 mr-2" />
-                                                    <span className="font-medium">Waiting for all users to settle their dues</span>
+                                                    <span className="font-medium">
+                                                        Waiting for all users to settle their dues
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
@@ -387,18 +386,14 @@ export default function PersonalExpense() {
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
-                        <DialogDescription>
-                            Select an account and confirm your payment
-                        </DialogDescription>
+                        <DialogDescription>Select an account and confirm your payment</DialogDescription>
                     </DialogHeader>
 
                     {selectedBorrower && (
                         <div className="px-6 py-4 space-y-4">
                             <div className="space-y-2">
                                 <p className="text-sm text-muted-foreground">Amount to Pay</p>
-                                <p className="text-2xl font-bold text-primary">
-                                    ${selectedBorrower.amountOwed}
-                                </p>
+                                <p className="text-2xl font-bold text-primary">${selectedBorrower.amountOwed}</p>
                             </div>
 
                             <div className="space-y-2">
@@ -408,7 +403,9 @@ export default function PersonalExpense() {
                                         {userAccounts.length === 0 ? (
                                             <div className="text-center py-4">
                                                 <Wallet className="h-8 w-8 mx-auto text-muted-foreground/50" />
-                                                <p className="text-sm text-muted-foreground mt-2">No accounts available</p>
+                                                <p className="text-sm text-muted-foreground mt-2">
+                                                    No accounts available
+                                                </p>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
@@ -422,10 +419,11 @@ export default function PersonalExpense() {
                                             userAccounts.map((account) => (
                                                 <div
                                                     key={account.id}
-                                                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${selectedAccount === account.id
-                                                        ? 'bg-primary/10 border-primary'
-                                                        : 'hover:bg-accent'
-                                                        }`}
+                                                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                                                        selectedAccount === account.id
+                                                            ? 'bg-primary/10 border-primary'
+                                                            : 'hover:bg-accent'
+                                                    }`}
                                                     onClick={() => setSelectedAccount(account.id)}
                                                 >
                                                     <div className="flex items-center space-x-3">
@@ -483,19 +481,14 @@ export default function PersonalExpense() {
                         <DialogDescription>
                             Are you sure you want to delete this expense? This action cannot be undone.
                             {expense && !expense.isSettled && (
-                                <p className="mt-2 text-red-500">
-                                    Note: This expense must be settled before deletion.
-                                </p>
+                                <p className="mt-2 text-red-500">Note: This expense must be settled before deletion.</p>
                             )}
                         </DialogDescription>
                     </DialogHeader>
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsDeleteExpenseDialogOpen(false)}
-                            >
+                            <Button variant="outline" onClick={() => setIsDeleteExpenseDialogOpen(false)}>
                                 Cancel
                             </Button>
                             <Button

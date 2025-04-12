@@ -88,7 +88,7 @@ export default function PersonalAccount() {
         async function fetchAccount() {
             try {
                 const response = await axios.get<Account>(`${BACKEND_URL}/account/${accountId}/user/${userId}`, {
-                    headers: { "Authorization": `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
                 setAccount(response.data);
             } catch (error) {
@@ -106,7 +106,7 @@ export default function PersonalAccount() {
         async function fetchTransactions() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
                 setTransactions(response.data);
             } catch (error) {
@@ -141,11 +141,13 @@ export default function PersonalAccount() {
                 setAmount('');
 
                 // Update account balance
-                setAccount((prev) => prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev);
+                setAccount((prev) =>
+                    prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev
+                );
 
                 // Refresh transactions
                 const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
                 setTransactions(transactionsResponse.data);
             }
@@ -172,7 +174,7 @@ export default function PersonalAccount() {
                 `${BACKEND_URL}/account/${accountId}/transfer`,
                 {
                     recipientAccountNumber: selectedRecipient.accountNumber,
-                    amount: sendAmount
+                    amount: sendAmount,
                 },
                 { headers: { Authorization: `Bearer ${getToken()}` } }
             );
@@ -185,13 +187,14 @@ export default function PersonalAccount() {
                 setSelectedRecipient(null);
 
                 // Update account balance
-                setAccount((prev) => prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev);
+                setAccount((prev) =>
+                    prev ? { ...prev, balance: parseFloat(response.data.balance.toFixed(2)) } : prev
+                );
 
                 // Refresh transactions
-                const transactionsResponse = await axios.get(
-                    `${BACKEND_URL}/account/${accountId}/transactions`,
-                    { headers: { Authorization: `Bearer ${getToken()}` } }
-                );
+                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
                 setTransactions(transactionsResponse.data);
             }
         } catch (error: AxiosError | any) {
@@ -202,12 +205,9 @@ export default function PersonalAccount() {
 
     async function handleDeleteAccount() {
         try {
-            const response = await axios.delete(
-                `${BACKEND_URL}/account/${accountId}`,
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` }
-                }
-            );
+            const response = await axios.delete(`${BACKEND_URL}/account/${accountId}`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
 
             if (response.status === 200) {
                 toast.success('Account deleted successfully');
@@ -230,12 +230,9 @@ export default function PersonalAccount() {
 
         setIsSearching(true);
         try {
-            const response = await axios.get(
-                `${BACKEND_URL}/account/search?term=${term}&excludeId=${accountId}`,
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` }
-                }
-            );
+            const response = await axios.get(`${BACKEND_URL}/account/search?term=${term}&excludeId=${accountId}`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
             setRecipientAccounts(response.data);
         } catch (error) {
             console.error('Error searching recipients:', error);
@@ -259,11 +256,7 @@ export default function PersonalAccount() {
                 <XCircle className="h-16 w-16 text-red-500 mb-4" />
                 <h2 className="text-2xl font-bold text-red-500">Account Not Found</h2>
                 <p className="text-muted-foreground mt-2">The requested account could not be found.</p>
-                <Button
-                    variant="outline"
-                    onClick={() => navigate('/main-room')}
-                    className="mt-4"
-                >
+                <Button variant="outline" onClick={() => navigate('/main-room')} className="mt-4">
                     Return to Dashboard
                 </Button>
             </div>
@@ -285,9 +278,7 @@ export default function PersonalAccount() {
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">
-                                {account.accountName}
-                            </h1>
+                            <h1 className="text-3xl font-bold tracking-tight">{account.accountName}</h1>
                             <p className="text-muted-foreground">
                                 Manage your {account.accountType.toLowerCase()} account
                             </p>
@@ -332,7 +323,8 @@ export default function PersonalAccount() {
                                 <p className="text-sm text-muted-foreground">Current Balance</p>
                                 <div className="flex items-baseline space-x-2">
                                     <h2 className="text-4xl font-bold text-primary">
-                                        ${typeof account.balance === 'string'
+                                        $
+                                        {typeof account.balance === 'string'
                                             ? parseFloat(account.balance).toFixed(2)
                                             : account.balance.toFixed(2)}
                                     </h2>
@@ -356,16 +348,12 @@ export default function PersonalAccount() {
 
                                 <div className="flex justify-between items-center">
                                     <p className="text-sm text-muted-foreground">Created On</p>
-                                    <Badge variant="outline">
-                                        {new Date(account.createdAt).toLocaleDateString()}
-                                    </Badge>
+                                    <Badge variant="outline">{new Date(account.createdAt).toLocaleDateString()}</Badge>
                                 </div>
 
                                 <div className="flex justify-between items-center">
                                     <p className="text-sm text-muted-foreground">Last Updated</p>
-                                    <Badge variant="outline">
-                                        {new Date(account.updatedAt).toLocaleDateString()}
-                                    </Badge>
+                                    <Badge variant="outline">{new Date(account.updatedAt).toLocaleDateString()}</Badge>
                                 </div>
                             </div>
 
@@ -377,10 +365,7 @@ export default function PersonalAccount() {
                                     <PlusCircle className="h-4 w-4 mr-2" />
                                     Add Money
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsSendMoneyDialogOpen(true)}
-                                >
+                                <Button variant="outline" onClick={() => setIsSendMoneyDialogOpen(true)}>
                                     <SendHorizontal className="h-4 w-4 mr-2" />
                                     Send Money
                                 </Button>
@@ -411,7 +396,8 @@ export default function PersonalAccount() {
                                         {transactions.map((transaction: any) => {
                                             const isCredit =
                                                 transaction.type === 'DEPOSIT' ||
-                                                (transaction.type === 'TRANSFER' && transaction.direction === 'incoming');
+                                                (transaction.type === 'TRANSFER' &&
+                                                    transaction.direction === 'incoming');
 
                                             const amountDisplay = `${isCredit ? '+' : '-'}${Number(transaction.amount).toFixed(2)}`;
 
@@ -473,7 +459,9 @@ export default function PersonalAccount() {
 
                                                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                                                             <CalendarDays className="h-4 w-4" />
-                                                            <span>{new Date(transaction.createdAt).toLocaleString()}</span>
+                                                            <span>
+                                                                {new Date(transaction.createdAt).toLocaleString()}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -492,9 +480,7 @@ export default function PersonalAccount() {
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-gradient-to-br from-background to-muted/50">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Add Money</DialogTitle>
-                        <DialogDescription>
-                            Add funds to your account
-                        </DialogDescription>
+                        <DialogDescription>Add funds to your account</DialogDescription>
                     </DialogHeader>
 
                     <div className="px-6 py-4 space-y-4">
@@ -542,9 +528,7 @@ export default function PersonalAccount() {
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Send Money</DialogTitle>
-                        <DialogDescription>
-                            Search for recipient by account number or name
-                        </DialogDescription>
+                        <DialogDescription>Search for recipient by account number or name</DialogDescription>
                     </DialogHeader>
 
                     <div className="px-6 py-4 space-y-6">
@@ -576,10 +560,10 @@ export default function PersonalAccount() {
                                             <div
                                                 key={recipient.id}
                                                 className={cn(
-                                                    "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors",
+                                                    'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors',
                                                     selectedRecipient?.id === recipient.id
-                                                        ? "bg-primary/10 border-primary"
-                                                        : "hover:bg-accent"
+                                                        ? 'bg-primary/10 border-primary'
+                                                        : 'hover:bg-accent'
                                                 )}
                                                 onClick={() => setSelectedRecipient(recipient)}
                                             >
@@ -692,13 +676,13 @@ export default function PersonalAccount() {
                                 <>
                                     {Number(account.balance) > 0 && (
                                         <p className="mt-2 text-red-500">
-                                            Warning: This account has a balance of ${Number(account.balance).toFixed(2)}.
-                                            Please withdraw or transfer all funds before deletion.
+                                            Warning: This account has a balance of ${Number(account.balance).toFixed(2)}
+                                            . Please withdraw or transfer all funds before deletion.
                                         </p>
                                     )}
                                     <p className="mt-2 text-red-500">
-                                        Note: You cannot delete an account with pending transactions.
-                                        Please ensure all transactions are settled before deletion.
+                                        Note: You cannot delete an account with pending transactions. Please ensure all
+                                        transactions are settled before deletion.
                                     </p>
                                 </>
                             )}
@@ -707,10 +691,7 @@ export default function PersonalAccount() {
 
                     <DialogFooter className="p-6 pt-4 bg-muted/40">
                         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsDeleteAccountDialogOpen(false)}
-                            >
+                            <Button variant="outline" onClick={() => setIsDeleteAccountDialogOpen(false)}>
                                 Cancel
                             </Button>
                             <Button

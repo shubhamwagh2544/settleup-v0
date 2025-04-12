@@ -38,17 +38,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 export default function MainRoom() {
-    const [room, setRoom] = useState("");
+    const [room, setRoom] = useState('');
     const [rooms, setRooms] = useState([]);
     const [userAccounts, setUserAccounts] = useState<Account[]>([]);
     const [userExpenses, setUserExpenses] = useState([]);
     const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
     const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
-    const [accountName, setAccountName] = useState("");
-    const [accountType, setAccountType] = useState<AccountType>("saving");
-    const [roomSearchQuery, setRoomSearchQuery] = useState("");
-    const [accountSearchQuery, setAccountSearchQuery] = useState("");
-    const [expenseSearchQuery, setExpenseSearchQuery] = useState("");
+    const [accountName, setAccountName] = useState('');
+    const [accountType, setAccountType] = useState<AccountType>('saving');
+    const [roomSearchQuery, setRoomSearchQuery] = useState('');
+    const [accountSearchQuery, setAccountSearchQuery] = useState('');
+    const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
     const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
     const [expenseName, setExpenseName] = useState('');
     const [expenseDescription, setExpenseDescription] = useState('');
@@ -59,36 +59,37 @@ export default function MainRoom() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const userId = get(location, 'state.userId') || localStorage.getItem('userId') || sessionStorage.getItem('userId') || null;
+    const userId =
+        get(location, 'state.userId') || localStorage.getItem('userId') || sessionStorage.getItem('userId') || null;
 
     const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
 
     useEffect(() => {
         async function fetchRooms() {
             const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
-                headers: { "Authorization": `Bearer ${getToken()}` }
+                headers: { Authorization: `Bearer ${getToken()}` },
             });
             setRooms(response.data);
         }
-        fetchRooms().catch(error => console.error("Error fetching rooms", error));
+        fetchRooms().catch((error) => console.error('Error fetching rooms', error));
 
         async function fetchUserAccounts() {
             const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
-                headers: { "Authorization": `Bearer ${getToken()}` }
+                headers: { Authorization: `Bearer ${getToken()}` },
             });
             setUserAccounts(response.data);
         }
-        fetchUserAccounts().catch(error => console.error("Error fetching user accounts", error));
+        fetchUserAccounts().catch((error) => console.error('Error fetching user accounts', error));
 
         async function fetchUserExpenses() {
             try {
                 const response = await axios.get(`${BACKEND_URL}/expense/user/${userId}`, {
-                    headers: { "Authorization": `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
                 setUserExpenses(response.data);
             } catch (error) {
-                console.error("Error fetching user expenses", error);
-                toast.error("Failed to load expenses");
+                console.error('Error fetching user expenses', error);
+                toast.error('Failed to load expenses');
             }
         }
         fetchUserExpenses();
@@ -100,7 +101,7 @@ export default function MainRoom() {
 
             try {
                 const response = await axios.get(`${BACKEND_URL}/room/${selectedRoom}/users`, {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 });
 
                 // Filter out the current user since they'll be the lender
@@ -118,23 +119,27 @@ export default function MainRoom() {
     async function createRoomHandler() {
         if (isEmpty(room.trim()) || isNil(room)) {
             toast.error('Room name is required');
-            setRoom("");
+            setRoom('');
             return;
         }
         try {
-            const response = await axios.post(`${BACKEND_URL}/room`, { name: room, userId }, {
-                headers: { "Authorization": `Bearer ${getToken()}` }
-            });
+            const response = await axios.post(
+                `${BACKEND_URL}/room`,
+                { name: room, userId },
+                {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                }
+            );
             if (response.status === 201) {
                 toast.success('Room created successfully!');
                 setIsRoomDialogOpen(false);
-                setRoom("");
+                setRoom('');
                 navigate(`/room/${response.data.id}`);
             }
         } catch (error: any) {
             if (error.status === 409) {
                 toast.error('Room already exists');
-                setRoom("");
+                setRoom('');
             }
             console.error('Error creating room', error);
         }
@@ -151,15 +156,19 @@ export default function MainRoom() {
         }
 
         try {
-            const response = await axios.post<Account>(`${BACKEND_URL}/account/user`, {
-                name: accountName,
-                type: accountType,
-                userId: userId
-            }, {
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
+            const response = await axios.post<Account>(
+                `${BACKEND_URL}/account/user`,
+                {
+                    name: accountName,
+                    type: accountType,
+                    userId: userId,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${getToken()}`,
+                    },
                 }
-            });
+            );
 
             if (response.status === 201 && response.data) {
                 toast.success('Account created successfully');
@@ -179,14 +188,16 @@ export default function MainRoom() {
         get(data, 'room.name', '').toLowerCase().includes(roomSearchQuery.toLowerCase())
     );
 
-    const filteredAccounts = userAccounts.filter((account) =>
-        account.accountName.toLowerCase().includes(accountSearchQuery.toLowerCase()) ||
-        account.accountType.toLowerCase().includes(accountSearchQuery.toLowerCase())
+    const filteredAccounts = userAccounts.filter(
+        (account) =>
+            account.accountName.toLowerCase().includes(accountSearchQuery.toLowerCase()) ||
+            account.accountType.toLowerCase().includes(accountSearchQuery.toLowerCase())
     );
 
-    const filteredExpenses = userExpenses.filter((expense: any) =>
-        expense.expense.name.toLowerCase().includes(expenseSearchQuery.toLowerCase()) ||
-        expense.expense.description?.toLowerCase().includes(expenseSearchQuery.toLowerCase())
+    const filteredExpenses = userExpenses.filter(
+        (expense: any) =>
+            expense.expense.name.toLowerCase().includes(expenseSearchQuery.toLowerCase()) ||
+            expense.expense.description?.toLowerCase().includes(expenseSearchQuery.toLowerCase())
     );
 
     async function handleCreateExpense() {
@@ -209,10 +220,10 @@ export default function MainRoom() {
                     name: expenseName,
                     description: expenseDescription || '',
                     amount: Number(expenseAmount),
-                    splitWith: selectedUsers
+                    splitWith: selectedUsers,
                 },
                 {
-                    headers: { Authorization: `Bearer ${getToken()}` }
+                    headers: { Authorization: `Bearer ${getToken()}` },
                 }
             );
 
@@ -299,7 +310,9 @@ export default function MainRoom() {
                                     {isEmpty(filteredRooms) ? (
                                         <div className="flex flex-col items-center justify-center py-8 text-center">
                                             <Users2 className="h-12 w-12 text-muted-foreground/50 mb-2" />
-                                            <p className="text-muted-foreground">No rooms found. Create a new room to get started!</p>
+                                            <p className="text-muted-foreground">
+                                                No rooms found. Create a new room to get started!
+                                            </p>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
@@ -329,8 +342,14 @@ export default function MainRoom() {
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <Badge variant={get(data, 'isAdmin', false) ? "default" : "secondary"}>
-                                                                    {get(data, 'isAdmin', false) ? "Admin" : "Member"}
+                                                                <Badge
+                                                                    variant={
+                                                                        get(data, 'isAdmin', false)
+                                                                            ? 'default'
+                                                                            : 'secondary'
+                                                                    }
+                                                                >
+                                                                    {get(data, 'isAdmin', false) ? 'Admin' : 'Member'}
                                                                 </Badge>
                                                             </div>
                                                         </div>
@@ -339,9 +358,19 @@ export default function MainRoom() {
                                                             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
                                                                 {get(data, 'room.name', 'N/A').charAt(0)}
                                                             </div>
-                                                            <span>Created {new Date(get(data, 'room.createdAt', '')).toLocaleDateString()}</span>
+                                                            <span>
+                                                                Created{' '}
+                                                                {new Date(
+                                                                    get(data, 'room.createdAt', '')
+                                                                ).toLocaleDateString()}
+                                                            </span>
                                                             <span>•</span>
-                                                            <span>Last updated {new Date(get(data, 'room.updatedAt', '')).toLocaleDateString()}</span>
+                                                            <span>
+                                                                Last updated{' '}
+                                                                {new Date(
+                                                                    get(data, 'room.updatedAt', '')
+                                                                ).toLocaleDateString()}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -387,7 +416,9 @@ export default function MainRoom() {
                                         <div className="flex flex-col items-center justify-center h-full space-y-2 text-center">
                                             <Wallet className="h-12 w-12 text-muted-foreground/50" />
                                             <p className="text-sm text-muted-foreground">
-                                                {accountSearchQuery ? "No accounts found matching your search" : "No accounts found. Add your first account!"}
+                                                {accountSearchQuery
+                                                    ? 'No accounts found matching your search'
+                                                    : 'No accounts found. Add your first account!'}
                                             </p>
                                         </div>
                                     ) : (
@@ -411,15 +442,26 @@ export default function MainRoom() {
                                                                         <Building className="h-3 w-3 mr-1" />
                                                                         {get(account, 'accountType', 'N/A')}
                                                                     </Badge>
-                                                                    <Badge variant={account.status === 'active' ? 'success' : 'destructive'}>
-                                                                        {account.status === 'active' ? 'Active' : 'Inactive'}
+                                                                    <Badge
+                                                                        variant={
+                                                                            account.status === 'active'
+                                                                                ? 'success'
+                                                                                : 'destructive'
+                                                                        }
+                                                                    >
+                                                                        {account.status === 'active'
+                                                                            ? 'Active'
+                                                                            : 'Inactive'}
                                                                     </Badge>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <Badge variant="outline" className="text-lg font-semibold">
-                                                                    <DollarSign className="h-4 w-4 mr-1" />
-                                                                    ${Number(account.balance).toFixed(2)}
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-lg font-semibold"
+                                                                >
+                                                                    <DollarSign className="h-4 w-4 mr-1" />$
+                                                                    {Number(account.balance).toFixed(2)}
                                                                 </Badge>
                                                             </div>
                                                         </div>
@@ -428,9 +470,15 @@ export default function MainRoom() {
                                                             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
                                                                 <Wallet className="h-3 w-3" />
                                                             </div>
-                                                            <span>Created {new Date(account.createdAt).toLocaleDateString()}</span>
+                                                            <span>
+                                                                Created{' '}
+                                                                {new Date(account.createdAt).toLocaleDateString()}
+                                                            </span>
                                                             <span>•</span>
-                                                            <span>Last updated {new Date(account.updatedAt).toLocaleDateString()}</span>
+                                                            <span>
+                                                                Last updated{' '}
+                                                                {new Date(account.updatedAt).toLocaleDateString()}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -476,7 +524,9 @@ export default function MainRoom() {
                                         <div className="flex flex-col items-center justify-center py-8 text-center">
                                             <Receipt className="h-12 w-12 text-muted-foreground/50 mb-2" />
                                             <p className="text-muted-foreground">
-                                                {expenseSearchQuery ? "No expenses found matching your search" : "No expenses found"}
+                                                {expenseSearchQuery
+                                                    ? 'No expenses found matching your search'
+                                                    : 'No expenses found'}
                                             </p>
                                         </div>
                                     ) : (
@@ -487,7 +537,11 @@ export default function MainRoom() {
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     className="group cursor-pointer"
-                                                    onClick={() => navigate(`/room/${expense.expense.roomId}/expenses/${expense.expenseId}`)}
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/room/${expense.expense.roomId}/expenses/${expense.expenseId}`
+                                                        )
+                                                    }
                                                 >
                                                     <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-primary/20">
                                                         <div className="flex items-start justify-between">
@@ -503,11 +557,15 @@ export default function MainRoom() {
                                                             </div>
                                                             <div className="flex items-center space-x-2">
                                                                 <Badge variant="outline">
-                                                                    <DollarSign className="h-3 w-3 mr-1" />
-                                                                    ${Number(expense.amountOwed).toFixed(2)}
+                                                                    <DollarSign className="h-3 w-3 mr-1" />$
+                                                                    {Number(expense.amountOwed).toFixed(2)}
                                                                 </Badge>
-                                                                <Badge variant={expense.isSettled ? "success" : "destructive"}>
-                                                                    {expense.isSettled ? "Settled" : "Pending"}
+                                                                <Badge
+                                                                    variant={
+                                                                        expense.isSettled ? 'success' : 'destructive'
+                                                                    }
+                                                                >
+                                                                    {expense.isSettled ? 'Settled' : 'Pending'}
                                                                 </Badge>
                                                             </div>
                                                         </div>
@@ -516,9 +574,15 @@ export default function MainRoom() {
                                                             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs">
                                                                 {expense.user.firstName.charAt(0)}
                                                             </div>
-                                                            <span>Paid by {expense.user.firstName} {expense.user.lastName}</span>
+                                                            <span>
+                                                                Paid by {expense.user.firstName} {expense.user.lastName}
+                                                            </span>
                                                             <span>•</span>
-                                                            <span>{new Date(expense.expense.createdAt).toLocaleDateString()}</span>
+                                                            <span>
+                                                                {new Date(
+                                                                    expense.expense.createdAt
+                                                                ).toLocaleDateString()}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -759,10 +823,11 @@ export default function MainRoom() {
                                             {rooms.map((data) => (
                                                 <div
                                                     key={get(data, 'room.id')}
-                                                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${selectedRoom === get(data, 'room.id')
-                                                        ? 'bg-primary/10 border-primary'
-                                                        : 'hover:bg-accent'
-                                                        }`}
+                                                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${
+                                                        selectedRoom === get(data, 'room.id')
+                                                            ? 'bg-primary/10 border-primary'
+                                                            : 'hover:bg-accent'
+                                                    }`}
                                                     onClick={() => setSelectedRoom(get(data, 'room.id'))}
                                                 >
                                                     <div className="flex items-center space-x-2">
@@ -797,14 +862,15 @@ export default function MainRoom() {
                                                     {roomUsers.map((user: any) => (
                                                         <div
                                                             key={user.id}
-                                                            className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${selectedUsers.includes(user.id)
-                                                                ? 'bg-primary/10 border-primary'
-                                                                : 'hover:bg-accent'
-                                                                }`}
+                                                            className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${
+                                                                selectedUsers.includes(user.id)
+                                                                    ? 'bg-primary/10 border-primary'
+                                                                    : 'hover:bg-accent'
+                                                            }`}
                                                             onClick={() => {
-                                                                setSelectedUsers(prev =>
+                                                                setSelectedUsers((prev) =>
                                                                     prev.includes(user.id)
-                                                                        ? prev.filter(id => id !== user.id)
+                                                                        ? prev.filter((id) => id !== user.id)
                                                                         : [...prev, user.id]
                                                                 );
                                                             }}

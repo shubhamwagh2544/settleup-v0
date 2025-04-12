@@ -9,7 +9,7 @@ const accountService = AccountService.getInstance();
 declare global {
     namespace Express {
         interface Request {
-            userId?: number
+            userId?: number;
         }
     }
 }
@@ -17,7 +17,7 @@ declare global {
 class AccountController {
     private static instance: AccountController;
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance(): AccountController {
         if (isNil(AccountController.instance)) {
@@ -112,11 +112,7 @@ class AccountController {
         try {
             const { accountId } = req.params;
             const { amount, recipientAccountNumber } = req.body;
-            const transaction = await accountService.transferMoney(
-                parseInt(accountId),
-                recipientAccountNumber,
-                amount
-            );
+            const transaction = await accountService.transferMoney(parseInt(accountId), recipientAccountNumber, amount);
             return res.status(200).json(transaction);
         } catch (error) {
             return errorHandler(error, req, res);

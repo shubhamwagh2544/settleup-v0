@@ -1,4 +1,4 @@
-import {Prisma} from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const userModel = Prisma.defineExtension({
     name: 'userWithFullName',
@@ -8,8 +8,8 @@ export const userModel = Prisma.defineExtension({
                 needs: { firstName: true, lastName: true },
                 compute(user: any) {
                     return `${user.firstName} ${user.lastName}`;
-                }
-            }
-        }
-    }
-})
+                },
+            },
+        },
+    },
+});

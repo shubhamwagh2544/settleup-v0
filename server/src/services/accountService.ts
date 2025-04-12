@@ -220,7 +220,7 @@ class AccountService {
                         user: {
                             select: {
                                 firstName: true,
-                                lastName: true
+                                lastName: true,
                             },
                         },
                     },
@@ -231,7 +231,7 @@ class AccountService {
                         user: {
                             select: {
                                 firstName: true,
-                                lastName: true
+                                lastName: true,
                             },
                         },
                     },

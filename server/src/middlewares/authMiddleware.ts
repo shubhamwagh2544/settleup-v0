@@ -17,7 +17,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
         const token = data[1];
 
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number, email: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
         req.userId = decoded.userId;
         req.email = decoded.email;
 

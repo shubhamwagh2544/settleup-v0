@@ -40,7 +40,7 @@ async function main() {
                 accountName: `${user.firstName}'s Account`,
                 accountNumber: await accountService.generateUniqueAccountNumber(),
                 accountType: 'saving',
-                balance: 1000.00,
+                balance: 1000.0,
                 status: 'active',
             },
         });

@@ -9,7 +9,7 @@ const prisma = DbConfig.getInstance();
 class ExpenseService {
     private static instance: ExpenseService;
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance() {
         if (isNil(ExpenseService.instance)) {
@@ -18,7 +18,14 @@ class ExpenseService {
         return ExpenseService.instance;
     }
 
-    async createExpense(userId: number, roomId: number, name: string, description: string, amount: number, splitWith: number[]) {
+    async createExpense(
+        userId: number,
+        roomId: number,
+        name: string,
+        description: string,
+        amount: number,
+        splitWith: number[]
+    ) {
         if (isNil(userId) || isNil(roomId)) {
             throw new CustomError('Invalid UserId / RoomId', 400);
         }
@@ -92,7 +99,7 @@ class ExpenseService {
                         expenseId: expense.id,
                         isLender: true,
                         amountOwed: new Prisma.Decimal(amountPerPerson + adjustment),
-                        isSettled: true
+                        isSettled: true,
                     },
                 });
 
@@ -103,7 +110,7 @@ class ExpenseService {
                         expenseId: expense.id,
                         isLender: false,
                         amountOwed: new Prisma.Decimal(amountPerPerson),
-                        isSettled: false
+                        isSettled: false,
                     })),
                 });
 
@@ -142,26 +149,28 @@ class ExpenseService {
         // add fullName to users
         for (const expense of room?.expenses) {
             const users = expense.users;
-            const userIds = expense.users.map(user => user.userId);
+            const userIds = expense.users.map((user) => user.userId);
             // @ts-ignore
-            expense.users = (await prisma.user.findMany({
-                where: {
-                    id: {
-                        in: userIds
+            expense.users = (
+                await prisma.user.findMany({
+                    where: {
+                        id: {
+                            in: userIds,
+                        },
                     },
-                },
-            })).map(user => ({
+                })
+            ).map((user) => ({
                 ...user,
-                fullName: `${user.firstName} ${user.lastName}`
-            }))
+                fullName: `${user.firstName} ${user.lastName}`,
+            }));
             // @ts-ignore
-            expense.users = expense.users.map(expenseUser => {
-                let obj = {}
-                users.forEach(user => {
+            expense.users = expense.users.map((expenseUser) => {
+                let obj = {};
+                users.forEach((user) => {
                     if (user.userId === expenseUser.id) {
                         obj = { ...user, ...expenseUser };
                     }
-                })
+                });
                 return obj;
             });
         }
@@ -173,8 +182,8 @@ class ExpenseService {
         // check if expense exists
         const expense = await prisma.expense.findUnique({
             where: {
-                id: expenseId
-            }
+                id: expenseId,
+            },
         });
         if (isNil(expense)) {
             throw new CustomError('Expense not Found', 404);
@@ -182,8 +191,8 @@ class ExpenseService {
         // check if expense is settled
         const userExpenseEntries = await prisma.userExpense.findMany({
             where: {
-                expenseId
-            }
+                expenseId,
+            },
         });
         const isSettled = userExpenseEntries.every((entry) => {
             return entry.isSettled === true;
@@ -194,9 +203,9 @@ class ExpenseService {
 
         await prisma.expense.delete({
             where: {
-                id: expense.id
-            }
-        })
+                id: expense.id,
+            },
+        });
         return 'Delete Successful';
     }
 
@@ -208,11 +217,11 @@ class ExpenseService {
         const expense = await prisma.expense.findUnique({
             where: {
                 id: expenseId,
-                roomId: roomId
+                roomId: roomId,
             },
             include: {
-                users: true
-            }
+                users: true,
+            },
         });
 
         if (isNil(expense)) {
@@ -220,35 +229,35 @@ class ExpenseService {
         }
 
         // Get user details for the expense
-        const userIds = expense.users.map(user => user.userId);
+        const userIds = expense.users.map((user) => user.userId);
         const userDetails = await prisma.user.findMany({
             where: {
                 id: {
-                    in: userIds
-                }
+                    in: userIds,
+                },
             },
             select: {
                 id: true,
                 firstName: true,
                 lastName: true,
-                email: true
-            }
+                email: true,
+            },
         });
 
         // Combine user details with expense user info
-        const enrichedUsers = expense.users.map(userExpense => {
-            const userDetail = userDetails.find(u => u.id === userExpense.userId);
+        const enrichedUsers = expense.users.map((userExpense) => {
+            const userDetail = userDetails.find((u) => u.id === userExpense.userId);
             return {
                 ...userExpense,
                 fullName: userDetail ? `${userDetail.firstName} ${userDetail.lastName}` : 'Unknown',
                 email: userDetail?.email,
-                roomId
+                roomId,
             };
         });
 
         return {
             ...expense,
-            users: enrichedUsers
+            users: enrichedUsers,
         };
     }
 
@@ -278,8 +287,8 @@ class ExpenseService {
             where: {
                 id: accountId,
                 userId: userId,
-                status: 'active'
-            }
+                status: 'active',
+            },
         });
 
         if (!account) {
@@ -296,13 +305,13 @@ class ExpenseService {
             // Deduct amount from user's account
             await tx.account.update({
                 where: {
-                    id: accountId
+                    id: accountId,
                 },
                 data: {
                     balance: {
-                        decrement: amount
-                    }
-                }
+                        decrement: amount,
+                    },
+                },
             });
 
             // Update the userExpense
@@ -310,13 +319,13 @@ class ExpenseService {
                 where: {
                     userId_expenseId: {
                         userId,
-                        expenseId
-                    }
+                        expenseId,
+                    },
                 },
                 data: {
                     amountOwed: 0,
-                    isSettled: true
-                }
+                    isSettled: true,
+                },
             });
 
             // Log the transaction
@@ -327,11 +336,11 @@ class ExpenseService {
                     description: `Settlement for expense: ${expense.name}`,
                     status: 'COMPLETED',
                     senderId: userId,
-                    receiverId: expense.users.find(u => u.isLender)?.userId || userId,
+                    receiverId: expense.users.find((u) => u.isLender)?.userId || userId,
                     senderAccountId: accountId,
                     receiverAccountId: null, // Lender's account will be updated separately
-                    createdAt: new Date()
-                }
+                    createdAt: new Date(),
+                },
             });
         });
 
@@ -342,7 +351,7 @@ class ExpenseService {
         // Check if expense exists
         const expense = await prisma.expense.findUnique({
             where: { id: expenseId },
-            include: { users: true }
+            include: { users: true },
         });
 
         if (!expense) {
@@ -350,8 +359,8 @@ class ExpenseService {
         }
 
         // Check if all users have settled
-        const borrowers = expense.users.filter(user => !user.isLender);
-        const allSettled = borrowers.every(user => user.isSettled);
+        const borrowers = expense.users.filter((user) => !user.isLender);
+        const allSettled = borrowers.every((user) => user.isSettled);
 
         if (!allSettled) {
             throw new CustomError('All users must settle their dues before marking expense as settled', 400);
@@ -360,7 +369,7 @@ class ExpenseService {
         // Update expense status
         await prisma.expense.update({
             where: { id: expenseId },
-            data: { isSettled: true }
+            data: { isSettled: true },
         });
 
         return { message: 'Expense settled successfully' };
@@ -377,8 +386,8 @@ class ExpenseService {
             },
             include: {
                 expense: true,
-                user: true
-            }
+                user: true,
+            },
         });
 
         if (isNil(userExpenses)) {

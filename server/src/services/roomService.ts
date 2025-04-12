@@ -9,7 +9,7 @@ const userService = UserService.getInstance();
 class RoomService {
     private static instance: RoomService;
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance() {
         if (isNil(RoomService.instance)) {
@@ -111,10 +111,10 @@ class RoomService {
                                         id: true,
                                         firstName: true,
                                         lastName: true,
-                                        email: true
-                                    }
-                                }
-                            }
+                                        email: true,
+                                    },
+                                },
+                            },
                         },
                         expenses: {
                             include: {
@@ -125,43 +125,43 @@ class RoomService {
                                                 id: true,
                                                 firstName: true,
                                                 lastName: true,
-                                                email: true
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                                email: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         });
 
         // Transform the response to include full names and clean up the structure
-        return userRooms.map(userRoom => {
+        return userRooms.map((userRoom) => {
             const room = userRoom.room;
             const transformedRoom = {
                 ...room,
-                users: room.users.map(ur => ({
+                users: room.users.map((ur) => ({
                     ...ur.user,
                     isAdmin: ur.isAdmin,
-                    fullName: `${ur.user.firstName} ${ur.user.lastName}`
+                    fullName: `${ur.user.firstName} ${ur.user.lastName}`,
                 })),
-                expenses: room.expenses.map(expense => ({
+                expenses: room.expenses.map((expense) => ({
                     ...expense,
-                    users: expense.users.map(eu => ({
+                    users: expense.users.map((eu) => ({
                         ...eu.user,
                         isLender: eu.isLender,
                         amountOwed: eu.amountOwed,
                         isSettled: eu.isSettled,
-                        fullName: `${eu.user.firstName} ${eu.user.lastName}`
-                    }))
-                }))
+                        fullName: `${eu.user.firstName} ${eu.user.lastName}`,
+                    })),
+                })),
             };
 
             return {
                 ...userRoom,
-                room: transformedRoom
+                room: transformedRoom,
             };
         });
     }
@@ -177,9 +177,9 @@ class RoomService {
                 users: true,
                 expenses: {
                     include: {
-                        users: true
-                    }
-                }
+                        users: true,
+                    },
+                },
             },
         });
         if (isNil(room)) {
@@ -189,28 +189,28 @@ class RoomService {
         // Add user details to expenses
         for (const expense of room.expenses) {
             const users = expense.users;
-            const userIds = users.map(user => user.userId);
+            const userIds = users.map((user) => user.userId);
 
             const userDetails = await prisma.user.findMany({
                 where: {
                     id: {
-                        in: userIds
+                        in: userIds,
                     },
                 },
                 select: {
                     id: true,
                     firstName: true,
                     lastName: true,
-                }
+                },
             });
 
             // Combine user details with expense user info
-            expense.users = users.map(userExpense => {
-                const userDetail = userDetails.find(u => u.id === userExpense.userId);
+            expense.users = users.map((userExpense) => {
+                const userDetail = userDetails.find((u) => u.id === userExpense.userId);
                 return {
                     ...userExpense,
                     fullName: userDetail ? `${userDetail.firstName} ${userDetail.lastName}` : 'Unknown',
-                    id: userExpense.userId
+                    id: userExpense.userId,
                 };
             });
         }
@@ -243,9 +243,9 @@ class RoomService {
         });
 
         // Combine user details with isAdmin information from room.users
-        return users.map(user => ({
+        return users.map((user) => ({
             ...user,
-            isAdmin: room.users.find(ru => ru.userId === user.id)?.isAdmin || false
+            isAdmin: room.users.find((ru) => ru.userId === user.id)?.isAdmin || false,
         }));
     }
 
@@ -309,20 +309,20 @@ class RoomService {
             where: {
                 id: roomId,
                 isActive: true,
-                isDefault: false
+                isDefault: false,
             },
             select: {
                 users: true,
-                expenses: true
-            }
+                expenses: true,
+            },
         });
         if (isNil(room)) {
             throw new CustomError('Room not found', 404);
         }
         const roomExpenses = room?.expenses;
-        const isSettled = roomExpenses.every(expense => {
-            return expense.isSettled === true
-        })
+        const isSettled = roomExpenses.every((expense) => {
+            return expense.isSettled === true;
+        });
         if (!isSettled) {
             throw new CustomError('Room Expenses are not settled', 409);
         }
@@ -333,22 +333,22 @@ class RoomService {
             prisma.userExpense.deleteMany({
                 where: {
                     expenseId: {
-                        in: roomExpenses.map(expense => expense.id)
-                    }
-                }
+                        in: roomExpenses.map((expense) => expense.id),
+                    },
+                },
             }),
             // Then delete Expenses
             prisma.expense.deleteMany({
-                where: { roomId }
+                where: { roomId },
             }),
             // Then delete UserRoom records
             prisma.userRoom.deleteMany({
-                where: { roomId }
+                where: { roomId },
             }),
             // Finally delete the Room
             prisma.room.delete({
-                where: { id: roomId }
-            })
+                where: { id: roomId },
+            }),
         ]);
 
         return 'Delete Successful';

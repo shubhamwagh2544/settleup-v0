@@ -6,20 +6,20 @@ import BACKEND_URL from '../config.ts';
 import { useSocket } from '@/SocketProvider.tsx';
 import { get } from 'lodash';
 import { Eye, EyeOff, UserPlus, Mail, Lock, User } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const formSchema = z.object({
-    firstname: z.string().min(2, "First name must be at least 2 characters"),
-    lastname: z.string().min(2, "Last name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    firstname: z.string().min(2, 'First name must be at least 2 characters'),
+    lastname: z.string().min(2, 'Last name must be at least 2 characters'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 export default function SignUp() {
@@ -30,10 +30,10 @@ export default function SignUp() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            firstname: "",
-            lastname: "",
-            email: "",
-            password: "",
+            firstname: '',
+            lastname: '',
+            email: '',
+            password: '',
         },
     });
 
@@ -48,7 +48,7 @@ export default function SignUp() {
                 const user = response.data.user;
                 socket?.emit('joinDefaultRoom', { user });
 
-                toast.success(`Welcome to SettleUp, ${get(user, 'firstName', "")}! 🎉`);
+                toast.success(`Welcome to SettleUp, ${get(user, 'firstName', '')}! 🎉`);
 
                 const token = response.data.token;
                 localStorage.setItem('token', token);
@@ -74,8 +74,8 @@ export default function SignUp() {
                 <div className="max-w-lg">
                     <h1 className="text-5xl font-bold mb-8">Join SettleUp Today</h1>
                     <p className="text-lg text-purple-100 mb-8">
-                        Create your account and start managing expenses with friends and family.
-                        Split bills effortlessly and keep track of shared expenses.
+                        Create your account and start managing expenses with friends and family. Split bills
+                        effortlessly and keep track of shared expenses.
                     </p>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
@@ -108,11 +108,7 @@ export default function SignUp() {
                         <CardDescription>Join thousands of users managing expenses together</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <Button
-                            variant="outline"
-                            className="w-full"
-                            type="button"
-                        >
+                        <Button variant="outline" className="w-full" type="button">
                             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                                 <path
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -153,11 +149,7 @@ export default function SignUp() {
                                                 <FormControl>
                                                     <div className="relative">
                                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                        <Input
-                                                            placeholder="First name"
-                                                            className="pl-9"
-                                                            {...field}
-                                                        />
+                                                        <Input placeholder="First name" className="pl-9" {...field} />
                                                     </div>
                                                 </FormControl>
                                                 <FormMessage />
@@ -174,11 +166,7 @@ export default function SignUp() {
                                                 <FormControl>
                                                     <div className="relative">
                                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                        <Input
-                                                            placeholder="Last name"
-                                                            className="pl-9"
-                                                            {...field}
-                                                        />
+                                                        <Input placeholder="Last name" className="pl-9" {...field} />
                                                     </div>
                                                 </FormControl>
                                                 <FormMessage />
@@ -219,7 +207,7 @@ export default function SignUp() {
                                                 <div className="relative">
                                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                     <Input
-                                                        type={showPassword ? "text" : "password"}
+                                                        type={showPassword ? 'text' : 'password'}
                                                         placeholder="Create password"
                                                         className="pl-9"
                                                         {...field}
@@ -264,10 +252,7 @@ export default function SignUp() {
                         <div className="text-center">
                             <p className="text-sm text-muted-foreground">
                                 Already have an account?{' '}
-                                <Link
-                                    to="/signin"
-                                    className="font-medium text-purple-600 hover:text-purple-500"
-                                >
+                                <Link to="/signin" className="font-medium text-purple-600 hover:text-purple-500">
                                     Sign In
                                 </Link>
                             </p>

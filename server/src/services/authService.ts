@@ -59,7 +59,7 @@ class AuthService {
         // todo: joins default room
 
         const { password: _, ...userWithoutPassword } = user;
-        return [ userWithoutPassword, token ];
+        return [userWithoutPassword, token];
     }
 
     async signIn(email: string, password: string) {
@@ -96,7 +96,7 @@ class AuthService {
         });
 
         const { password: _, ...userWithoutPassword } = user;
-        return [ userWithoutPassword, token ];
+        return [userWithoutPassword, token];
     }
 }
 

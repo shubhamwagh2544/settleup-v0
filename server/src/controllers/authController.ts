@@ -32,8 +32,8 @@ class AuthController {
     async signUp(req: Request, res: Response) {
         try {
             const { firstname, lastname, email, password } = req.body;
-            const [ user, token ] = await authService.signUp(firstname, lastname, email, password);
-            return res.status(201).json({user, token});
+            const [user, token] = await authService.signUp(firstname, lastname, email, password);
+            return res.status(201).json({ user, token });
         } catch (error) {
             return errorHandler(error, req, res);
         }
@@ -42,7 +42,7 @@ class AuthController {
     async signIn(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
-            const [ user, token ] = await authService.signIn(email, password);
+            const [user, token] = await authService.signIn(email, password);
             return res.status(200).json({ user, token });
         } catch (error) {
             return errorHandler(error, req, res);

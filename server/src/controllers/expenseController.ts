@@ -9,7 +9,7 @@ const expenseService = ExpenseService.getInstance();
 class ExpenseController {
     private static instance: ExpenseController;
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance() {
         if (isNil(ExpenseController.instance)) {
@@ -94,7 +94,6 @@ class ExpenseController {
             return errorHandler(error, req, res);
         }
     }
-
 }
 
 export default ExpenseController;

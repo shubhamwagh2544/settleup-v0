@@ -1,24 +1,24 @@
 import React from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
 import BACKEND_URL from '../config.ts';
 import { toast } from 'sonner';
 import { useSocket } from '@/SocketProvider.tsx';
 import { get } from 'lodash';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const formSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
     rememberMe: z.boolean().default(false),
 });
 
@@ -30,8 +30,8 @@ export default function SignIn() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
-            password: "",
+            email: '',
+            password: '',
             rememberMe: false,
         },
     });
@@ -46,19 +46,23 @@ export default function SignIn() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            const response: AxiosResponse = await axios.post(`${BACKEND_URL}/auth/signin`, {
-                email: values.email,
-                password: values.password,
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
+            const response: AxiosResponse = await axios.post(
+                `${BACKEND_URL}/auth/signin`,
+                {
+                    email: values.email,
+                    password: values.password,
                 },
-            });
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
 
             if (response.status === 200) {
-                const {user, token} = response.data;
+                const { user, token } = response.data;
                 socket?.emit('joinDefaultRoom', { user });
-                toast.success(`Welcome back, ${get(user, 'firstName', "")}! 🎉`);
+                toast.success(`Welcome back, ${get(user, 'firstName', '')}! 🎉`);
 
                 if (values.rememberMe) {
                     localStorage.setItem('token', token);
@@ -69,21 +73,18 @@ export default function SignIn() {
                 }
 
                 navigate(`/main-room`, { state: { userId: user.id } });
-            }
-            else {
+            } else {
                 toast.error('Something went wrong');
                 navigate('/signin');
             }
         } catch (error: any) {
             if (error.response?.status === 404) {
                 toast.error('Account not found! Please sign up');
-            }
-            else if (error.response?.status === 401) {
+            } else if (error.response?.status === 401) {
                 toast.error('Invalid credentials! Please try again');
             } else if (error.response?.status === 400) {
                 toast.error(error.response?.data?.message);
-            }
-            else {
+            } else {
                 toast.error('Something went wrong');
             }
         }
@@ -95,8 +96,8 @@ export default function SignIn() {
                 <div className="max-w-lg">
                     <h1 className="text-5xl font-bold mb-8">Welcome to SettleUp</h1>
                     <p className="text-lg text-purple-100 mb-8">
-                        The easiest way to share expenses with friends and family.
-                        Track bills, split costs, and settle up with ease.
+                        The easiest way to share expenses with friends and family. Track bills, split costs, and settle
+                        up with ease.
                     </p>
                     <div className="flex space-x-4">
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
@@ -122,11 +123,7 @@ export default function SignIn() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {/* Google Sign In */}
-                        <Button
-                            variant="outline"
-                            className="w-full"
-                            type="button"
-                        >
+                        <Button variant="outline" className="w-full" type="button">
                             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                                 <path
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -166,11 +163,7 @@ export default function SignIn() {
                                             <FormControl>
                                                 <div className="relative">
                                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        placeholder="Enter your email"
-                                                        className="pl-9"
-                                                        {...field}
-                                                    />
+                                                    <Input placeholder="Enter your email" className="pl-9" {...field} />
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
@@ -188,7 +181,7 @@ export default function SignIn() {
                                                 <div className="relative">
                                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                     <Input
-                                                        type={showPassword ? "text" : "password"}
+                                                        type={showPassword ? 'text' : 'password'}
                                                         placeholder="Enter your password"
                                                         className="pl-9"
                                                         {...field}
@@ -220,14 +213,9 @@ export default function SignIn() {
                                         render={({ field }) => (
                                             <FormItem className="flex items-center space-x-2">
                                                 <FormControl>
-                                                    <Checkbox
-                                                        checked={field.value}
-                                                        onCheckedChange={field.onChange}
-                                                    />
+                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                                                 </FormControl>
-                                                <FormLabel className="text-sm font-normal">
-                                                    Remember me
-                                                </FormLabel>
+                                                <FormLabel className="text-sm font-normal">Remember me</FormLabel>
                                             </FormItem>
                                         )}
                                     />
@@ -260,10 +248,7 @@ export default function SignIn() {
                         <div className="text-center">
                             <p className="text-sm text-muted-foreground">
                                 Don't have an account?{' '}
-                                <Link
-                                    to="/signup"
-                                    className="font-medium text-purple-600 hover:text-purple-500"
-                                >
+                                <Link to="/signup" className="font-medium text-purple-600 hover:text-purple-500">
                                     Sign Up
                                 </Link>
                             </p>
