@@ -2,9 +2,12 @@ import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
 import { isNil, map } from 'lodash';
 import UserService from './userService';
+import { createScopedLogger, LogMeta } from '../utils/loggerWrapper';
 
+const LoggerLabel = 'RoomService';
 const prisma = DbConfig.getInstance();
 const userService = UserService.getInstance();
+const logger = createScopedLogger(LoggerLabel);
 
 class RoomService {
     private static instance: RoomService;
@@ -92,8 +95,9 @@ class RoomService {
         });
     }
 
-    async getRoomsByUserId(userId: number) {
-        const user = await userService.getUserByIdOrEmail(userId, null);
+    async getRoomsByUserId(userId: number, meta: LogMeta) {
+        logger.info(`Fetching rooms for userId: ${meta.userId} and email: ${meta.email}`, meta);
+        const user = await userService.getUserByIdOrEmail(userId, null, meta);
         if (isNil(user)) {
             throw new CustomError('User not found', 404);
         }

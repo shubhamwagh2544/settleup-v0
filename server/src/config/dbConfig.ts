@@ -1,13 +1,15 @@
 import { PrismaClient } from '@prisma/client';
+
 import { isNil } from 'lodash';
 import { userModel } from '../model-extensions/userModel';
+import { NODE_ENV } from './config';
 
 class DbConfig {
     private static prisma: ReturnType<typeof DbConfig.createPrismaInstance>;
 
     private static createPrismaInstance() {
         return new PrismaClient({
-            log: ['query'],
+            log: NODE_ENV === 'production' ? [] : ['query']
         }).$extends(userModel);
     }
 

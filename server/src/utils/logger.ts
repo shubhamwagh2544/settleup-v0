@@ -1,23 +1,26 @@
 import winston from 'winston';
+import { NODE_ENV } from '../config/config';
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
-const logFormat = printf(({ level, message, timestamp, label, stack, ...metadata }) => {
-    let logMessage = `${timestamp} ${level}: ${message}`;
-    if (label) {
-        logMessage = `${timestamp} ${level}: [${label}]: ${message}`; // Add the label to the message
-    }
-    if (stack) {
-        logMessage = `${logMessage}\nStack: ${stack}`; // Add stack trace if available
-    }
+const logFormat = printf(({ level, message, timestamp, label, function: func, stack, ...metadata }) => {
+    let logMessage = `${timestamp} ${level}:`;
+
+    if (label) logMessage += ` [${label}]`;
+    if (func) logMessage += `::[${func}]`;
+
+    logMessage += `: ${message}`;
+
+    if (stack) logMessage += `\nStack: ${stack}`;
+
     if (Object.keys(metadata).length) {
-        logMessage = `${logMessage} ${JSON.stringify(metadata)}`; // Log the metadata (e.g., request info, error details)
+        logMessage += ` ${JSON.stringify(metadata)}`;
     }
     return logMessage;
 });
 
 const logger = winston.createLogger({
-    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    level: NODE_ENV === 'production' ? 'info' : 'debug',
     format: combine(
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         errors({ stack: true }), // Log stack trace for errors
@@ -25,7 +28,7 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.Console({
-            format: combine(colorize(), logFormat),
+            format: combine(colorize(), logFormat)
         }),
         new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
         new winston.transports.File({ filename: 'logs/combined.log' }),

@@ -1,10 +1,11 @@
 class CustomError extends Error {
-    public statusCode: number;
+    statusCode: number;
+    meta?: Record<string, unknown>;
 
-    public constructor(message: string, statusCode: number) {
+    constructor(message: string, statusCode = 400, meta?: Record<string, unknown>) {
         super(message);
         this.statusCode = statusCode;
-        this.name = this.constructor.name;
+        this.meta = meta;
         Error.captureStackTrace(this, this.constructor);
     }
 }

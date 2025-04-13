@@ -4,6 +4,7 @@ dotenv.config();
 
 export const NODE_PORT = process.env.NODE_PORT;
 export const JWT_SECRET = process.env.JWT_SECRET as string;
+export const NODE_ENV = process.env.NODE_ENV as string;
 
 const CLIENT_URL = process.env.CLIENT_URL as string;
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE'];

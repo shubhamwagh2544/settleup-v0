@@ -3,6 +3,8 @@ import { isNil } from 'lodash';
 
 import errorHandler from '../middlewares/errorHandler';
 import RoomService from '../services/roomService';
+import logger from '../utils/logger';
+import { buildLogMeta } from '../utils/loggerWrapper';
 
 const roomService = RoomService.getInstance();
 
@@ -39,9 +41,11 @@ class RoomController {
     }
 
     async getRoomsByUserId(req: Request, res: Response) {
+        const meta = buildLogMeta(req, 'getRoomsByUserId');
+        logger.info(`Fetching rooms for userId: ${meta.userId}`, meta);
         try {
             const { userId } = req.params;
-            const rooms = await roomService.getRoomsByUserId(parseInt(userId));
+            const rooms = await roomService.getRoomsByUserId(parseInt(userId), meta);
             return res.status(200).json(rooms);
         } catch (error) {
             return errorHandler(error, req, res);

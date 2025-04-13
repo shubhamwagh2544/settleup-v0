@@ -1,3 +1,5 @@
+import { NODE_ENV } from '../config/config';
+
 export const validateAccountNumber = (accountNumber: string): boolean => {
     // Remove environment prefix if present
     const number = accountNumber.replace('DEV', '');
@@ -6,9 +8,9 @@ export const validateAccountNumber = (accountNumber: string): boolean => {
     if (number.length !== 12) return false;
 
     // Check if all characters are digits
-    if (!/^\d+$/.test(number)) return false;
+    return /^\d+$/.test(number);
 
-    return true;
+
 };
 
 export const formatAccountNumber = (accountNumber: string): string => {
@@ -18,7 +20,7 @@ export const formatAccountNumber = (accountNumber: string): string => {
 };
 
 export const restoreAccountNumber = (formattedAccountNumber: string): string => {
-    return process.env.NODE_ENV === 'production'
+    return NODE_ENV === 'production'
         ? formattedAccountNumber.replace(/-/g, '')
         : `DEV${formattedAccountNumber.replace(/-/g, '')}`;
 };

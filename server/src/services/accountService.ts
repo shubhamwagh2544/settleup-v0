@@ -2,6 +2,7 @@ import { isNil } from 'lodash';
 import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
 import { formatAccountNumber, restoreAccountNumber } from '../utils/accountUtils';
+import { NODE_ENV } from '../config/config';
 
 const prisma = DbConfig.getInstance();
 
@@ -56,7 +57,7 @@ class AccountService {
                 .padStart(ACCOUNT_NUMBER_LENGTH, '0');
 
             // Add prefix based on environment (e.g., 'DEV' for development)
-            const accountNumber = `${process.env.NODE_ENV === 'production' ? '' : 'DEV'}${randomPart}`;
+            const accountNumber = `${NODE_ENV === 'production' ? '' : 'DEV'}${randomPart}`;
 
             // Check if account number already exists
             const existingAccount = await prisma.account.findUnique({

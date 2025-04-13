@@ -10,10 +10,15 @@ import DbConfig from './config/dbConfig';
 import AuthRoutes from './routes/authRoutes';
 import ExpenseRoutes from './routes/expenseRoutes';
 import AccountRoutes from './routes/accountRoutes';
+import requestIdMiddleware from './middlewares/requestId';
+import { createScopedLogger } from './utils/loggerWrapper';
 
 export const app = express();
 const server = http.createServer(app);
 // const io = new Server(server, { cors: corsOptions });
+
+const LoggerLabel = 'App';
+const logger = createScopedLogger(LoggerLabel);
 
 const accountRoutes = AccountRoutes.getInstance();
 const authRoutes = AuthRoutes.getInstance();
@@ -29,24 +34,24 @@ const expenseRoutes = ExpenseRoutes.getInstance();
 //     });
 // });
 
-// connect to database
 DbConfig.connectDatabase().then(() => {
-    console.log('Connected to the database');
+    logger.info('Connected to the database successfully');
 });
 
-// create a default room
 DbConfig.createDefaultRoom().then((room) => {
-    console.log('Default room created:', room.id);
+    logger.info(`Default room created with id: ${room.id}`);
 });
 
 // create a admin user
 DbConfig.createSuperAdminUser().then((user) => {
-    console.log('Super Admin user created:', user.id);
+    logger.info(`Super Admin user created with id: ${user.id}`);
 });
 
 // middlewares
 app.use(express.json());
 app.use(cors(corsOptions));
+
+app.use(requestIdMiddleware);
 
 app.use('/api/account', accountRoutes.getRouter());
 app.use('/api/auth', authRoutes.getRouter());
@@ -63,5 +68,5 @@ app.get('/health', (req: Request, res: Response) => {
 
 // start server
 server.listen(NODE_PORT, () => {
-    console.log('Server is running on port ' + NODE_PORT);
+    logger.info(`Server is running on port ${NODE_PORT}`)
 });
