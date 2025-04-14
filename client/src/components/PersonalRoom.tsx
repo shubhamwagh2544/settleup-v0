@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
-import BACKEND_URL from '@/config';
+import { AxiosError } from 'axios';
 import { get, isEmpty, isNil } from 'lodash';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, CheckCircle, Clock, DollarSign, Receipt, Trash2, UserCircle, UserPlus, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { parseMoney, roundMoney } from '@/lib/money';
+import api from '@/apis/axios.ts';
 
 interface Room {
     id: string;
@@ -56,7 +56,6 @@ export default function PersonalRoom() {
     const navigate = useNavigate();
     const [isDeleteRoomDialogOpen, setIsDeleteRoomDialogOpen] = useState(false);
 
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const getUserId = () => localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     function createExpenseHandler() {
@@ -66,11 +65,7 @@ export default function PersonalRoom() {
     useEffect(() => {
         async function fetchRoom() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
-                });
+                const response = await api.get(`/room/${roomId}`);
                 setRoom(response.data);
             } catch (error: any) {
                 console.error('Error fetching room', error);
@@ -80,11 +75,7 @@ export default function PersonalRoom() {
 
         async function fetchRoomUsers() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/room/${roomId}/users`, {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
-                });
+                const response = await api.get(`/room/${roomId}/users`);
                 setRoomUsers(response.data);
             } catch (error) {
                 console.error('Error fetching users', error);
@@ -94,11 +85,7 @@ export default function PersonalRoom() {
 
         async function fetchAllUsers() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/user`, {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
-                });
+                const response = await api.get(`/user`);
                 setAllUsers(response.data);
             } catch (error: any) {
                 console.error('Error fetching users', error);
@@ -106,11 +93,11 @@ export default function PersonalRoom() {
             }
         }
 
-        fetchRoom();
-        fetchRoomUsers();
+        fetchRoom().catch((error) => console.error('Failed to load room', error));
+        fetchRoomUsers().catch((error) => console.error('Failed to load room users', error));
 
         if (isAddUsersDialogOpen) {
-            fetchAllUsers();
+            fetchAllUsers().catch((error) => console.error('Failed to load all users', error));
         }
     }, [roomId, isAddUsersDialogOpen]);
 
@@ -124,17 +111,9 @@ export default function PersonalRoom() {
 
     async function handleAddUsers() {
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/room/${roomId}/users`,
-                {
-                    userIds: selectedUsers,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
-                }
-            );
+            const response = await api.post(`/room/${roomId}/users`, {
+                userIds: selectedUsers,
+            });
             const addedUsers = response.data;
             console.log('Added users', addedUsers);
             toast.success('Users added to the room');
@@ -172,22 +151,14 @@ export default function PersonalRoom() {
         try {
             const loggedInUserId = Number(getUserId()); // Get the logged-in user's ID
 
-            const response = await axios.post(
-                `${BACKEND_URL}/expense`,
-                {
-                    userId: loggedInUserId, // Use logged-in user as lender
-                    roomId: roomId ? parseInt(roomId) : null,
-                    name: expenseName,
-                    description: expenseDescription,
-                    amount: roundMoney(amount),
-                    splitWith: selectedUsers,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
-                }
-            );
+            const response = await api.post(`/expense`, {
+                userId: loggedInUserId, // Use logged-in user as lender
+                roomId: roomId ? parseInt(roomId) : null,
+                name: expenseName,
+                description: expenseDescription,
+                amount: roundMoney(amount),
+                splitWith: selectedUsers,
+            });
 
             console.log('Expense created', response.data);
             toast.success('Expense created successfully');
@@ -195,11 +166,7 @@ export default function PersonalRoom() {
             setSelectedUsers([]);
 
             // Fetch the updated list of expenses
-            const updatedExpensesResponse = await axios.get(`${BACKEND_URL}/room/${roomId}`, {
-                headers: {
-                    Authorization: `Bearer ${getToken()}`,
-                },
-            });
+            const updatedExpensesResponse = await api.get(`/room/${roomId}`);
             setRoom(updatedExpensesResponse.data);
         } catch (error: any) {
             console.error('Error creating expense', error);
@@ -210,11 +177,7 @@ export default function PersonalRoom() {
 
     async function handleDeleteRoom() {
         try {
-            const response = await axios.delete(`${BACKEND_URL}/room/${roomId}`, {
-                headers: {
-                    Authorization: `Bearer ${getToken()}`,
-                },
-            });
+            const response = await api.delete(`/room/${roomId}`);
             console.log(response);
             if (response.status === 200 && response.data.includes('Delete Successful')) {
                 navigate('/main-room', { state: { userId: getUserId() } });
@@ -229,6 +192,7 @@ export default function PersonalRoom() {
         }
     }
 
+    // Todo ? check if required
     // async function handleDeleteExpense(expenseId: number) {
     //     try {
     //         const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {

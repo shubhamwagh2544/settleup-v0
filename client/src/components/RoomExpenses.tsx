@@ -1,14 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { find, get, isEmpty } from 'lodash';
 import { toast } from 'sonner';
-import axios, { AxiosError } from 'axios';
-import BACKEND_URL from '@/config';
+import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Receipt, Wallet, DollarSign, Trash2, CreditCard, Users, Search } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, CreditCard, DollarSign, Receipt, Search, Trash2, Users, Wallet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
     Dialog,
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import api from '@/apis/axios.ts';
 
 export default function RoomExpenses() {
     const { roomId } = useParams();
@@ -32,19 +32,14 @@ export default function RoomExpenses() {
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [room, setRoom] = useState(null);
 
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const loggedInUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [expensesResponse, roomResponse] = await Promise.all([
-                    axios.get(`${BACKEND_URL}/expense/room/${roomId}`, {
-                        headers: { Authorization: `Bearer ${getToken()}` },
-                    }),
-                    axios.get(`${BACKEND_URL}/room/${roomId}`, {
-                        headers: { Authorization: `Bearer ${getToken()}` },
-                    }),
+                    api.get(`/expense/room/${roomId}`),
+                    api.get(`/room/${roomId}`),
                 ]);
 
                 setExpenses(expensesResponse.data);
@@ -58,14 +53,12 @@ export default function RoomExpenses() {
             }
         };
 
-        fetchData();
+        fetchData().catch((error) => console.error('Failed to load room and room-expenses', error));
     }, [roomId]);
 
     async function deleteExpense(expenseId: number) {
         try {
-            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.delete(`/expense/${expenseId}`);
 
             if (response?.data.includes('Delete Successful') && response?.status === 200) {
                 toast.success('Expense deleted successfully');

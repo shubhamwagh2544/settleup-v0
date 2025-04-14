@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Account, AccountType } from '@/types/Account.ts';
-import axios from 'axios';
 import { Button } from './ui/button';
-import BACKEND_URL from '@/config.ts';
 import { get, isEmpty, isNil } from 'lodash';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +34,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import api from '@/apis/axios.ts';
 
 export default function MainRoom() {
     const [room, setRoom] = useState('');
@@ -59,40 +58,31 @@ export default function MainRoom() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const userId =
-        get(location, 'state.userId') || localStorage.getItem('userId') || sessionStorage.getItem('userId') || null;
-
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+    const userId = get(location, 'state.userId') || localStorage.getItem('userId') || sessionStorage.getItem('userId') || null;
 
     useEffect(() => {
         async function fetchRooms() {
-            const response = await axios.get(`${BACKEND_URL}/room/${userId}/rooms`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.get(`/room/${userId}/rooms`);
             setRooms(response.data);
         }
         fetchRooms().catch((error) => console.error('Error fetching rooms', error));
 
         async function fetchUserAccounts() {
-            const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.get(`/account/user/${userId}`);
             setUserAccounts(response.data);
         }
         fetchUserAccounts().catch((error) => console.error('Error fetching user accounts', error));
 
         async function fetchUserExpenses() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/expense/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/expense/user/${userId}`);
                 setUserExpenses(response.data);
             } catch (error) {
                 console.error('Error fetching user expenses', error);
                 toast.error('Failed to load expenses');
             }
         }
-        fetchUserExpenses();
+        fetchUserExpenses().catch((error) => console.error('Error fetching user expenses', error));
     }, []);
 
     useEffect(() => {
@@ -100,9 +90,7 @@ export default function MainRoom() {
             if (!selectedRoom) return;
 
             try {
-                const response = await axios.get(`${BACKEND_URL}/room/${selectedRoom}/users`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/room/${selectedRoom}/users`);
 
                 // Filter out the current user since they'll be the lender
                 const filteredUsers = response.data.filter((user: any) => user.id !== Number(userId));
@@ -113,7 +101,7 @@ export default function MainRoom() {
             }
         }
 
-        fetchRoomUsers();
+        fetchRoomUsers().catch((error) => console.error('Error fetching room users', error));
     }, [selectedRoom]);
 
     async function createRoomHandler() {
@@ -123,12 +111,9 @@ export default function MainRoom() {
             return;
         }
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/room`,
+            const response = await api.post(
+                `/room`,
                 { name: room, userId },
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                }
             );
             if (response.status === 201) {
                 toast.success('Room created successfully!');
@@ -156,17 +141,12 @@ export default function MainRoom() {
         }
 
         try {
-            const response = await axios.post<Account>(
-                `${BACKEND_URL}/account/user`,
+            const response = await api.post<Account>(
+                `/account/user`,
                 {
                     name: accountName,
                     type: accountType,
                     userId: userId,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                    },
                 }
             );
 
@@ -212,8 +192,8 @@ export default function MainRoom() {
         }
 
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/expense`,
+            const response = await api.post(
+                `/expense`,
                 {
                     userId: Number(userId),
                     roomId: Number(selectedRoom),
@@ -221,9 +201,6 @@ export default function MainRoom() {
                     description: expenseDescription || '',
                     amount: Number(expenseAmount),
                     splitWith: selectedUsers,
-                },
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` },
                 }
             );
 

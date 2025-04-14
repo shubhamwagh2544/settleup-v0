@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SettleUp - Roadmap</title>
+    <style>
+        :root {
+            --bg: #f7f9fc;
+            --text: #1f2937;
+            --card-bg: #fff;
+            --accent: #3b82f6;
+        }
+
+        [data-theme='dark'] {
+            --bg: #1e293b;
+            --text: #f8fafc;
+            --card-bg: #334155;
+            --accent: #60a5fa;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-theme {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+
+        .sections {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .sections {
+                grid-template-columns: 1fr;
+            }
+
+            .toggle-theme {
+                position: static;
+                text-align: right;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="toggle-theme" onclick="toggleTheme()">🌗 Toggle Theme</div>
+    <h1>🚧 SettleUp Roadmap</h1>
+    <div class="sections">
+        <div class="card">
+            <h2>✅ Currently Working On</h2>
+            <ul>
+                <li>Test Feature</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h2>🚀 Upcoming Features</h2>
+            <ul>
+                <li>Email notifications for settlements</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+    }
+</script>
+</body>
+</html>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
-import BACKEND_URL from '@/config';
+import { AxiosError } from 'axios';
 import { isEmpty, isNil } from 'lodash';
 import { Account } from '@/types/Account';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +41,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import api from '@/apis/axios.ts';
 
 interface Transaction {
     id: number;
@@ -81,15 +81,12 @@ export default function PersonalAccount() {
     const [selectedRecipient, setSelectedRecipient] = useState<RecipientAccount | null>(null);
     const [isSearching, setIsSearching] = useState(false);
 
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     useEffect(() => {
         async function fetchAccount() {
             try {
-                const response = await axios.get<Account>(`${BACKEND_URL}/account/${accountId}/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get<Account>(`/account/${accountId}/user/${userId}`);
                 setAccount(response.data);
             } catch (error) {
                 console.error('Error fetching account details:', error);
@@ -99,15 +96,13 @@ export default function PersonalAccount() {
             }
         }
 
-        fetchAccount();
+        fetchAccount().catch((error) => console.error('Failed to load user account', error));
     }, [accountId, userId]);
 
     useEffect(() => {
         async function fetchTransactions() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/account/${accountId}/transactions`);
                 setTransactions(response.data);
             } catch (error) {
                 console.error('Error fetching transactions:', error);
@@ -116,7 +111,7 @@ export default function PersonalAccount() {
         }
 
         if (accountId) {
-            fetchTransactions();
+            fetchTransactions().then((error) => console.error('Failed to load account transactions', error));
         }
     }, [accountId, userId]);
 
@@ -129,11 +124,7 @@ export default function PersonalAccount() {
         }
 
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/account/${accountId}/user/${userId}/deposit`,
-                { amount: depositAmount },
-                { headers: { Authorization: `Bearer ${getToken()}` } }
-            );
+            const response = await api.post(`/account/${accountId}/user/${userId}/deposit`, { amount: depositAmount });
 
             if (response.status === 200 && !isNil(response.data.balance)) {
                 toast.success('Money added successfully');
@@ -146,9 +137,7 @@ export default function PersonalAccount() {
                 );
 
                 // Refresh transactions
-                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const transactionsResponse = await api.get(`/account/${accountId}/transactions`);
                 setTransactions(transactionsResponse.data);
             }
         } catch (error: AxiosError | any) {
@@ -170,14 +159,10 @@ export default function PersonalAccount() {
         }
 
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/account/${accountId}/transfer`,
-                {
-                    recipientAccountNumber: selectedRecipient.accountNumber,
-                    amount: sendAmount,
-                },
-                { headers: { Authorization: `Bearer ${getToken()}` } }
-            );
+            const response = await api.post(`/account/${accountId}/transfer`, {
+                recipientAccountNumber: selectedRecipient.accountNumber,
+                amount: sendAmount,
+            });
 
             if (response.status === 200) {
                 toast.success('Money sent successfully');
@@ -192,9 +177,7 @@ export default function PersonalAccount() {
                 );
 
                 // Refresh transactions
-                const transactionsResponse = await axios.get(`${BACKEND_URL}/account/${accountId}/transactions`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const transactionsResponse = await api.get(`/account/${accountId}/transactions`);
                 setTransactions(transactionsResponse.data);
             }
         } catch (error: AxiosError | any) {
@@ -205,9 +188,7 @@ export default function PersonalAccount() {
 
     async function handleDeleteAccount() {
         try {
-            const response = await axios.delete(`${BACKEND_URL}/account/${accountId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.delete(`/account/${accountId}`);
 
             if (response.status === 200) {
                 toast.success('Account deleted successfully');
@@ -230,9 +211,7 @@ export default function PersonalAccount() {
 
         setIsSearching(true);
         try {
-            const response = await axios.get(`${BACKEND_URL}/account/search?term=${term}&excludeId=${accountId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.get(`/account/search?term=${term}&excludeId=${accountId}`);
             setRecipientAccounts(response.data);
         } catch (error) {
             console.error('Error searching recipients:', error);

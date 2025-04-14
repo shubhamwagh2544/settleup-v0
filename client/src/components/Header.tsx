@@ -13,9 +13,8 @@ import { HelpCircle, LogOut, Menu, Receipt, Settings, SquareActivity, User, User
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import BACKEND_URL from '@/config';
 import { DashboardIcon } from '@radix-ui/react-icons';
+import api from '@/apis/axios.ts';
 
 export function Header() {
     const location = useLocation();
@@ -24,7 +23,6 @@ export function Header() {
     // const [notifications, setNotifications] = useState(3);
     const [user, setUser] = useState({ firstName: '', lastName: '', email: '' });
 
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const getUserId = () => localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     useEffect(() => {
@@ -42,9 +40,7 @@ export function Header() {
                 const userId = getUserId();
                 if (!userId) return;
 
-                const response = await axios.get(`${BACKEND_URL}/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/user/${userId}`);
 
                 setUser(response.data);
             } catch (error) {
@@ -52,7 +48,7 @@ export function Header() {
             }
         }
 
-        fetchUserDetails();
+        fetchUserDetails().then(error => console.error('Failed to load user details', error));
     }, []);
 
     const handleSignOut = () => {
