@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
-import BACKEND_URL from '@/config';
+import { AxiosError } from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, Receipt, Trash2, Users, XCircle, CreditCard, Clock, Wallet } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, CreditCard, Receipt, Trash2, Users, Wallet, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -19,6 +18,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import api from '@/apis/axios.ts';
 
 interface ExpenseUser {
     userId: number;
@@ -58,15 +58,12 @@ export default function PersonalExpense() {
     const [userAccounts, setUserAccounts] = useState<Account[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
 
-    const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
     useEffect(() => {
         async function fetchExpense() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/expense/room/${roomId}/expense/${expenseId}`);
                 setExpense(response.data);
             } catch (error) {
                 console.error('Error fetching expense:', error);
@@ -76,7 +73,7 @@ export default function PersonalExpense() {
             }
         }
 
-        fetchExpense();
+        fetchExpense().then((error) => console.error('Failed to load personal expense', error));
     }, [expenseId, roomId]);
 
     useEffect(() => {
@@ -90,9 +87,7 @@ export default function PersonalExpense() {
     useEffect(() => {
         async function fetchUserAccounts() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/account/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const response = await api.get(`/account/user/${userId}`);
                 setUserAccounts(response.data);
             } catch (error) {
                 console.error('Error fetching user accounts:', error);
@@ -100,7 +95,7 @@ export default function PersonalExpense() {
             }
         }
 
-        fetchUserAccounts();
+        fetchUserAccounts().then((error) => console.error('Failed to load user accounts', error));
     }, [userId]);
 
     if (loading) {
@@ -139,25 +134,17 @@ export default function PersonalExpense() {
         }
 
         try {
-            const response = await axios.put(
-                `${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`,
-                {
-                    userId: selectedBorrower.userId,
-                    amount: selectedBorrower.amountOwed,
-                    accountId: parseInt(selectedAccount),
-                },
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                }
-            );
+            const response = await api.put(`/expense/room/${roomId}/expense/${expenseId}`, {
+                userId: selectedBorrower.userId,
+                amount: selectedBorrower.amountOwed,
+                accountId: parseInt(selectedAccount),
+            });
 
             if (response.status === 200) {
                 toast.success('Payment processed successfully');
                 setIsPaymentDialogOpen(false);
                 // Refresh expense data
-                const updatedResponse = await axios.get(`${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const updatedResponse = await api.get(`/expense/room/${roomId}/expense/${expenseId}`);
                 setExpense(updatedResponse.data);
             }
         } catch (error: any) {
@@ -174,20 +161,12 @@ export default function PersonalExpense() {
         if (!expense) return;
 
         try {
-            const response = await axios.put(
-                `${BACKEND_URL}/expense/${expense.id}/settle`,
-                {},
-                {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                }
-            );
+            const response = await api.put(`/expense/${expense.id}/settle`);
 
             if (response.status === 200) {
                 toast.success('Expense settled successfully');
                 // Refresh expense data
-                const updatedResponse = await axios.get(`${BACKEND_URL}/expense/room/${roomId}/expense/${expenseId}`, {
-                    headers: { Authorization: `Bearer ${getToken()}` },
-                });
+                const updatedResponse = await api.get(`/expense/room/${roomId}/expense/${expenseId}`);
                 setExpense(updatedResponse.data);
             }
         } catch (error) {
@@ -198,9 +177,7 @@ export default function PersonalExpense() {
 
     async function handleDeleteExpense() {
         try {
-            const response = await axios.delete(`${BACKEND_URL}/expense/${expenseId}`, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            const response = await api.delete(`/expense/${expenseId}`);
 
             if (response?.data.includes('Delete Successful') && response?.status === 200) {
                 toast.success('Expense deleted successfully');

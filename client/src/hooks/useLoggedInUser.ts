@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import BACKEND_URL from '@/config.ts';
+import { useEffect, useState } from 'react';
+import api from '@/apis/axios.ts';
 
 export function useLoggedInUser() {
     const [user, setUser] = useState({});
@@ -10,11 +9,7 @@ export function useLoggedInUser() {
     useEffect(() => {
         async function fetchUser() {
             try {
-                const response = await axios.get(`${BACKEND_URL}/auth/me`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
-                    },
-                });
+                const response = await api.get(`/auth/me`);
                 setUser(response.data);
             } catch (err: any) {
                 setError(err.message);
