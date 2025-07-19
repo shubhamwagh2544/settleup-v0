@@ -7,6 +7,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import SignIn from './components/SignIn.tsx';
 import SignUp from './components/SignUp.tsx';
 import PersonalExpense from './components/PersonalExpense.tsx';
+import UserProfile from '@/components/UserProfile.tsx';
 
 function Layout() {
     const location = useLocation();
@@ -25,6 +26,7 @@ function Layout() {
                 <Route path="/room/:roomId/expenses" element={<RoomExpenses />} />
                 <Route path="/account/:accountId" element={<PersonalAccount />} />
                 <Route path="/room/:roomId/expenses/:expenseId" element={<PersonalExpense />} />
+                <Route path="/profile/:userId" element={<UserProfile />} />
             </Routes>
         </>
     );

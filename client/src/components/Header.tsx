@@ -197,7 +197,7 @@ export function Header() {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
-                                    <Link to="/account" className="flex w-full cursor-pointer">
+                                    <Link to={`/profile/${getUserId()}`} className="flex w-full cursor-pointer">
                                         <User className="mr-2 h-4 w-4" />
                                         Profile
                                     </Link>

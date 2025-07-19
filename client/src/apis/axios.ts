@@ -1,5 +1,7 @@
 import axios from 'axios';
 import BACKEND_URL from '@/config.ts';
+import { get, includes } from 'lodash';
+import { toast } from 'sonner';
 
 const api = axios.create({
     baseURL: BACKEND_URL
@@ -19,10 +21,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401 && error.response?.data?.message === 'jwt expired') {
+        if (get(error, 'response.status') === 401 || includes(['jwt expired', 'Please authenticate first'], get(error, 'response.data.error'))) {
             localStorage.removeItem('token');
             sessionStorage.removeItem('token');
-            window.location.href = '/login';
+            toast.warning('Your session has expired. Please login again.')
+            window.location.href = '/';
         }
         return Promise.reject(error);
     }
