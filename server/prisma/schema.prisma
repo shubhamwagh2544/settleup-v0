@@ -191,3 +191,7 @@ enum NotificationType {
   PAYMENT_CONFIRMED
   ROOM_UPDATED
 }
+
+model IdentityProvider {
+  id Int @id @default(autoincrement()) @map("id") @db.Integer
+}
