@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import UserService from '../services/userService';
 import errorHandler from '../middlewares/errorHandler';
-import { isNil, parseInt } from 'lodash';
+import { get, isNil, parseInt } from 'lodash';
 import { userIdSchema } from '../validations/userValidations';
 import { buildLogMeta, createScopedLogger } from '../utils/loggerWrapper';
 import CustomError from '../error/customError';
@@ -63,6 +63,19 @@ class UserController {
             return res.status(200).json(userInfo);
         } catch (error) {
             logger.error('Error occurred while fetching user information', { ...meta, error });
+            return errorHandler(error, req, res);
+        }
+    }
+
+    async updateUser(req: Request, res: Response) {
+        const meta = buildLogMeta(req, 'updateUser');
+        try {
+            logger.info(`Updating user details for : ${meta.email}`, meta);
+            const params = get(req, 'body', {});
+            const updatedUser = await userService.updateUser(params, meta);
+            return res.status(200).json(updatedUser);
+        } catch (error) {
+            logger.error('Error occurred while updating user', { ...meta, error });
             return errorHandler(error, req, res);
         }
     }

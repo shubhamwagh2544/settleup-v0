@@ -22,7 +22,7 @@ class DbConfig {
 
     public static async connectDatabase() {
         try {
-            DbConfig.prisma.$connect();
+            await DbConfig.prisma.$connect();
         } catch (error) {
             console.error('Error connecting to the database:', error);
         }
@@ -30,7 +30,7 @@ class DbConfig {
 
     public static async disconnectDatabase() {
         try {
-            DbConfig.prisma.$disconnect();
+            await DbConfig.prisma.$disconnect();
             console.log('Disconnected from the database');
         } catch (error) {
             console.error('Error disconnecting from the database:', error);

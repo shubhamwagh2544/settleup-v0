@@ -59,8 +59,8 @@ class UserService {
         // User => Rooms => Accounts => Expenses
     }
 
-    async updateUser(id: number) {
-        // await this.getUserByIdOrEmail(id, null);
+    async updateUser(params: object, meta: LogMeta) {
+
     }
 
     async deleteUser(id: number) {
