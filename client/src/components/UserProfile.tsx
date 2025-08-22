@@ -37,10 +37,7 @@ const formSchema = z.object({
     firstName: z.string().min(2, "First name must be at least 2 characters").optional(),
     lastName: z.string().min(2, "Last name must be at least 2 characters").optional(),
     email: z.string().email("Invalid email address"),
-    phoneNumber: z
-        .string()
-        .regex(/^\+?[\d\s-]+$/, "Invalid phone number")
-        .optional(),
+    phoneNumber: z.string().optional(),
     address: z.string().optional(),
     profilePic: z.string().optional(),
     defaultLang: z.string(),
@@ -53,28 +50,28 @@ type UserProfileFormValues = z.infer<typeof formSchema>;
 export default function UserProfile() {
     const [isLoading, setIsLoading] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
-    const [userData, setUserData] = useState<Partial<UserProfileFormValues> | null>(null);
 
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+    const form = useForm<UserProfileFormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            phoneNumber: "",
+            address: "",
+            profilePic: "",
+            defaultLang: "en",
+            mfaEnabled: false,
+            isPrivate: false,
+        },
+    });
 
     useEffect(() => {
         async function fetchUserData() {
             try {
-                const response = await api.get(`/user/${userId}`);
-                const user = response.data;
-
-                setUserData({
-                    firstName: user.firstName || "",
-                    lastName: user.lastName || "",
-                    email: user.email,
-                    phoneNumber: user.phoneNumber || "",
-                    address: user.address || "",
-                    profilePic: user.profilePic || "",
-                    defaultLang: user.defaultLang || "en",
-                    mfaEnabled: user.mfaEnabled || false,
-                    isPrivate: user.isPrivate || false,
-                });
-
+                const { data: user } = await api.get(`/user/${userId}`);
                 form.reset({
                     firstName: user.firstName || "",
                     lastName: user.lastName || "",
@@ -97,30 +94,14 @@ export default function UserProfile() {
         if (userId) {
             fetchUserData();
         }
-    }, [userId]);
-
-
-    const defaultValues: Partial<UserProfileFormValues> = {
-        firstName: "",
-        lastName: "",
-        email: "",
-        phoneNumber: "",
-        address: "",
-        profilePic: "",
-        defaultLang: "en",
-        mfaEnabled: false,
-        isPrivate: false,
-    };
-
-    const form = useForm<UserProfileFormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues,
-    });
+    }, [userId, form]);
 
     async function onSubmit(data: UserProfileFormValues) {
         setIsLoading(true);
         try {
-            await api.put(`/user/${userId}`, data);
+            const { data: updatedUser } = await api.put(`/user/${userId}`, data);
+            console.log('Updated user:', updatedUser);
+            form.reset(updatedUser);
             toast.success('Profile updated successfully');
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -147,9 +128,7 @@ export default function UserProfile() {
                             <Avatar className="h-20 w-20">
                                 <AvatarImage src={form.getValues("profilePic")} />
                                 <AvatarFallback>
-                                    {`${form.getValues("firstName")?.[0] || ""}${
-                                        form.getValues("lastName")?.[0] || ""
-                                    }`}
+                                    {`${form.getValues("firstName")?.[0] || ""}${form.getValues("lastName")?.[0] || ""}`}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
@@ -163,6 +142,7 @@ export default function UserProfile() {
                     <CardContent>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                {/* Name fields */}
                                 <div className="grid gap-5 md:grid-cols-2">
                                     <FormField
                                         control={form.control}
@@ -192,6 +172,7 @@ export default function UserProfile() {
                                     />
                                 </div>
 
+                                {/* Email */}
                                 <FormField
                                     control={form.control}
                                     name="email"
@@ -201,7 +182,6 @@ export default function UserProfile() {
                                             <FormControl>
                                                 <Input
                                                     {...field}
-                                                    value={userData?.email || ''}
                                                     disabled
                                                     readOnly
                                                     className="bg-muted cursor-not-allowed opacity-70"
@@ -215,6 +195,7 @@ export default function UserProfile() {
                                     )}
                                 />
 
+                                {/* Phone */}
                                 <FormField
                                     control={form.control}
                                     name="phoneNumber"
@@ -229,6 +210,7 @@ export default function UserProfile() {
                                     )}
                                 />
 
+                                {/* Address */}
                                 <FormField
                                     control={form.control}
                                     name="address"
@@ -247,16 +229,14 @@ export default function UserProfile() {
                                     )}
                                 />
 
+                                {/* Language */}
                                 <FormField
                                     control={form.control}
                                     name="defaultLang"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Default Language</FormLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                            >
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select a language" />
@@ -273,6 +253,7 @@ export default function UserProfile() {
                                     )}
                                 />
 
+                                {/* Toggles */}
                                 <div className="grid gap-5 md:grid-cols-2">
                                     <FormField
                                         control={form.control}
@@ -280,18 +261,13 @@ export default function UserProfile() {
                                         render={({ field }) => (
                                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                                 <div className="space-y-0.5">
-                                                    <FormLabel className="text-base">
-                                                        Two-Factor Authentication
-                                                    </FormLabel>
+                                                    <FormLabel className="text-base">Two-Factor Authentication</FormLabel>
                                                     <FormDescription>
                                                         Enable two-factor authentication for enhanced security
                                                     </FormDescription>
                                                 </div>
                                                 <FormControl>
-                                                    <Switch
-                                                        checked={field.value}
-                                                        onCheckedChange={field.onChange}
-                                                    />
+                                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                                                 </FormControl>
                                             </FormItem>
                                         )}
@@ -309,16 +285,14 @@ export default function UserProfile() {
                                                     </FormDescription>
                                                 </div>
                                                 <FormControl>
-                                                    <Switch
-                                                        checked={field.value}
-                                                        onCheckedChange={field.onChange}
-                                                    />
+                                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                                                 </FormControl>
                                             </FormItem>
                                         )}
                                     />
                                 </div>
 
+                                {/* Submit */}
                                 <Button type="submit" className="w-full" disabled={isLoading}>
                                     {isLoading ? "Updating..." : "Update Profile"}
                                 </Button>

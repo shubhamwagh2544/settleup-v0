@@ -24,7 +24,8 @@ class UserRoutes {
     private initialiseRoutes() {
         this.userRouter.get('/:id', authMiddleware, userController.getUserByIdOrEmail);
         this.userRouter.get('/', authMiddleware, userController.getUsers);
-        this.userRouter.get('/:id/info', userController.getUserInfo);
+        this.userRouter.get('/:id/info', authMiddleware, userController.getUserInfo);
+        this.userRouter.put('/:id', authMiddleware, userController.updateUser);
     }
 
     public getRouter() {

@@ -3,6 +3,8 @@ import { isNil } from 'lodash';
 import CustomError from '../error/customError';
 import DbConfig from '../config/dbConfig';
 import { createScopedLogger, LogMeta } from '../utils/loggerWrapper';
+import { User } from '@prisma/client';
+import { userSchema } from '../validations/userValidations';
 
 const LoggerLabel = 'UserService';
 const prisma = DbConfig.getInstance();
@@ -59,8 +61,40 @@ class UserService {
         // User => Rooms => Accounts => Expenses
     }
 
-    async updateUser(params: object, meta: LogMeta) {
+    async updateUser(params: Partial<User>, meta: LogMeta) {
+        const validatorResult = userSchema.safeParse(params);
+        if (validatorResult.error) {
+            throw new CustomError(validatorResult.error.message, 400);
+        }
 
+        const email = params.email;
+        const user: Partial<User> = await this.getUserByIdOrEmail(null, email, meta);
+        if (isNil(user)) {
+            throw new CustomError('User not found', 404);
+        }
+
+        const allowedFields = ['firstName', 'lastName', 'password', 'phoneNumber', 'address', 'profilePic'];
+        const updatedData: Record<string, any> = {};
+        const paramsRecord = params as Record<string, any>;
+        const userRecord = user as Record<string, any>;
+
+        for (const key of allowedFields) {
+            if (key in params && key in user && userRecord[key] !== paramsRecord[key]) {
+                updatedData[key] = paramsRecord[key];
+            }
+        }
+
+        if (Object.keys(updatedData).length !== 0) {
+            // Return the updated user directly
+            let updatedUser = await prisma.user.update({
+                where: { id: user.id },
+                data: updatedData,
+            });
+            const {password, ...updatedUserWithoutPassword} = updatedUser;
+            return updatedUserWithoutPassword;
+        }
+
+        return user;
     }
 
     async deleteUser(id: number) {
