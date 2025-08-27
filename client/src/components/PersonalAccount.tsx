@@ -42,6 +42,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import api from '@/apis/axios.ts';
+import { useDebounce } from '@/hooks/useDebounce.ts';
 
 interface Transaction {
     id: number;
@@ -82,6 +83,7 @@ export default function PersonalAccount() {
     const [isSearching, setIsSearching] = useState(false);
 
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     useEffect(() => {
         async function fetchAccount() {
@@ -203,23 +205,27 @@ export default function PersonalAccount() {
         }
     }
 
-    const searchRecipients = async (term: string) => {
-        if (!term) {
-            setRecipientAccounts([]);
-            return;
-        }
+    useEffect(() => {
+        const searchRecipients = async (term: string) => {
+            if (!term || term.length < 2) {
+                setRecipientAccounts([]);
+                return;
+            }
 
-        setIsSearching(true);
-        try {
-            const response = await api.get(`/account/search?term=${term}&excludeId=${accountId}`);
-            setRecipientAccounts(response.data);
-        } catch (error) {
-            console.error('Error searching recipients:', error);
-            // toast.error('Failed to search recipients');
-        } finally {
-            setIsSearching(false);
-        }
-    };
+            setIsSearching(true);
+            try {
+                const response = await api.get(`/account/search?term=${term}&excludeId=${accountId}`);
+                setRecipientAccounts(response.data);
+            } catch (error) {
+                console.error("Error searching recipients:", error);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        searchRecipients(debouncedSearchTerm);
+    }, [debouncedSearchTerm, accountId]);
+
 
     if (loading) {
         return (
@@ -507,7 +513,7 @@ export default function PersonalAccount() {
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0">
                     <DialogHeader className="p-6 pb-4">
                         <DialogTitle className="text-2xl">Send Money</DialogTitle>
-                        <DialogDescription>Search for recipient by account number or name</DialogDescription>
+                        <DialogDescription>Search for recipient by account name or user name</DialogDescription>
                     </DialogHeader>
 
                     <div className="px-6 py-4 space-y-6">
@@ -517,12 +523,9 @@ export default function PersonalAccount() {
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Enter account number or name..."
+                                    placeholder="Enter account number or user name..."
                                     value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        searchRecipients(e.target.value);
-                                    }}
+                                    onChange={(e) => setSearchTerm(e.target.value)} // only updates state
                                     className="pl-9"
                                 />
                             </div>

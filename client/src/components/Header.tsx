@@ -181,7 +181,7 @@ export function Header() {
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src="/placeholder-avatar.jpg" alt="Profile" />
                                         <AvatarFallback className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white">
-                                            U
+                                            {user.firstName[0]}{user.lastName[0]}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>

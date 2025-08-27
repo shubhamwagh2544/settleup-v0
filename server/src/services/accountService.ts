@@ -3,6 +3,7 @@ import DbConfig from '../config/dbConfig';
 import CustomError from '../error/customError';
 import { formatAccountNumber, restoreAccountNumber } from '../utils/accountUtils';
 import { NODE_ENV } from '../config/config';
+import { AccountTypes } from '../types/accountTypes';
 
 const prisma = DbConfig.getInstance();
 
@@ -288,51 +289,35 @@ class AccountService {
     }
 
     async searchRecipientAccounts(searchTerm: string, excludeAccountId: number) {
-        return prisma.account
-            .findMany({
-                where: {
-                    AND: [
-                        {
-                            OR: [
-                                {
-                                    accountNumber: {
-                                        contains: searchTerm.replace(/\D/g, ''), // Remove non-digits for searching
-                                    },
-                                },
-                                { accountName: { contains: searchTerm } },
-                                {
-                                    user: {
-                                        OR: [
-                                            { firstName: { contains: searchTerm } },
-                                            { lastName: { contains: searchTerm } },
-                                        ],
-                                    },
-                                },
-                            ],
-                        },
-                        { id: { not: excludeAccountId } },
-                        { status: 'active' },
-                    ],
-                },
-                select: {
-                    id: true,
-                    accountNumber: true,
-                    accountName: true,
-                    user: {
-                        select: {
-                            firstName: true,
-                            lastName: true,
-                        },
-                    },
-                },
-                take: 5,
-            })
-            .then((accounts) =>
-                accounts.map((account) => ({
-                    ...account,
-                    accountNumber: formatAccountNumber(account.accountNumber), // Format for display
-                }))
-            );
+        const formattedSearchTerm = `%${searchTerm}%`;
+
+        const accounts = await prisma.$queryRaw<AccountTypes[]>
+            `SELECT 
+              a.id,
+              a."account_number" as "accountNumber",
+              a."account_name" as "accountName",
+              u."first_name" as "firstName",
+              u."last_name" as "lastName"
+            FROM "Account" a
+            INNER JOIN "User" u ON a."user_id" = u.id
+            WHERE 
+              a.id != ${excludeAccountId}
+              AND a.status = 'active'
+              AND (
+                a."account_name" ILIKE ${formattedSearchTerm} OR
+                u."first_name" ILIKE ${formattedSearchTerm} OR
+                u."last_name" ILIKE ${formattedSearchTerm}
+              )
+            LIMIT 5;`;
+
+        return accounts.map((account) => ({
+            ...account,
+            accountNumber: formatAccountNumber(account.accountNumber),
+            user: {
+                firstName: account.firstName,
+                lastName: account.lastName,
+            },
+        }));
     }
 
     async transferMoney(senderAccountId: number, recipientAccountNumber: string, amount: number) {
