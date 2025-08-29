@@ -37,7 +37,7 @@ const formSchema = z.object({
     firstName: z.string().min(2, "First name must be at least 2 characters").optional(),
     lastName: z.string().min(2, "Last name must be at least 2 characters").optional(),
     email: z.string().email("Invalid email address"),
-    phoneNumber: z.string().optional(),
+    phoneNumber: z.string().optional().transform(val => val === "" ? null : val),
     address: z.string().optional(),
     profilePic: z.string().optional(),
     defaultLang: z.string(),
@@ -203,7 +203,7 @@ export default function UserProfile() {
                                         <FormItem>
                                             <FormLabel>Phone Number</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="+1 234 567 8900" {...field} />
+                                                <Input placeholder="+1 234 567 8900" {...field} value={field.value ?? ""}/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

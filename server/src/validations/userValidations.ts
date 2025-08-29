@@ -4,7 +4,7 @@ const userSchema = z.object({
     firstName: z.string().min(1).optional(),
     lastName: z.string().min(1).optional(),
     password: z.string().min(6).optional(),
-    phoneNumber: z.string().optional(),
+    phoneNumber: z.string().nullable().optional(),
     address: z.string().optional(),
     profilePic: z.string()
         // .url()

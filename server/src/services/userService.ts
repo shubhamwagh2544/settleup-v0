@@ -1,4 +1,4 @@
-import { isNil } from 'lodash';
+import { isEmpty, isNil } from 'lodash';
 
 import CustomError from '../error/customError';
 import DbConfig from '../config/dbConfig';
@@ -73,7 +73,7 @@ class UserService {
             throw new CustomError('User not found', 404);
         }
 
-        const allowedFields = ['firstName', 'lastName', 'password', 'phoneNumber', 'address', 'profilePic'];
+        const allowedFields = ['firstName', 'lastName', 'password', 'phoneNumber', 'address', 'profilePic', 'defaultLang'];
         const updatedData: Record<string, any> = {};
         const paramsRecord = params as Record<string, any>;
         const userRecord = user as Record<string, any>;
@@ -86,6 +86,9 @@ class UserService {
 
         if (Object.keys(updatedData).length !== 0) {
             // Return the updated user directly
+            if (isEmpty(updatedData.phoneNumber)) {
+                updatedData.phoneNumber = null;
+            }
             let updatedUser = await prisma.user.update({
                 where: { id: user.id },
                 data: updatedData,
